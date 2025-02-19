@@ -18,6 +18,8 @@ def get_images(punch_out, x, y, dimension, side, row, row_length):
         else:
             x += dimension
 
+def crop_gameboard(board, x, y, width, height):
+    pass
 
 
 def main():
