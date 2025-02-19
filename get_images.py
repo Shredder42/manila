@@ -24,7 +24,8 @@ def get_images_front(punch_out, x, y, row, row_length):
     load punchout image and crop out game pieces from front of the countersheet
     the front has fewer pieces to pick out 
     '''
-    pass
+    side = 44
+    punchout = pygame.image.load(f'./images/{punch_out}')
 
 def main():
     # get the images from the back of the countersheet
