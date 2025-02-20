@@ -18,8 +18,10 @@ def get_images(punch_out, x, y, dimension, side, row, row_length):
         else:
             x += dimension
 
-def crop_gameboard(board, x, y, width, height):
-    pass
+def crop_gameboard():
+    board = pygame.image.load('./images/m45_map.jpg')
+    cropped = board.subsurface(0, 0, 1248, 1275)
+    pygame.image.save(cropped, './images/map_only.png')
 
 
 def main():
@@ -27,12 +29,15 @@ def main():
     x, y = 19, 37
     dimension = 44  # pixel dimensions of playing piece
     for i in range(11):
-        get_images('m45_countersback.png', x, y, dimension, 'back', i + 1, 16)
-        get_images('m45_countersfront.png', x, y, dimension, 'front', i + 1, 16)
+        # get_images('m45_countersback.png', x, y, dimension, 'back', i + 1, 16)
+        # get_images('m45_countersfront.png', x, y, dimension, 'front', i + 1, 16)
         if (i + 1) % 2 == 0:
             y += dimension + 10
         else:
             y += dimension
+    
+    # get cropped map
+    crop_gameboard()
 
 if __name__ == '__main__':
     main()
