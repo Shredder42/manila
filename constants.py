@@ -1,0 +1,6 @@
+SCREEN_WIDTH = 1500
+SCREEN_HEIGHT = 1000
+
+ESPRESSO = (75, 56, 42) # table top color
+
+FRAME_RATE = 60
