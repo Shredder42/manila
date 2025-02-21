@@ -1,7 +1,7 @@
 import os
 import pygame
 from constants import *
-from pieces import AmericanUnit
+from pieces import AmericanUnit, JapaneseUnit
 
 # pygame setup
 pygame.init()
@@ -15,7 +15,8 @@ surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA) # need 
 clock = pygame.time.Clock()
 
 # remove this test unit
-test_unit = AmericanUnit('1_5', '1st Cav', 'infantry', 5, 6, 2, '1_5_fresh.png', '1_5_spent.png')
+test_unit1 = AmericanUnit('1_5', '1st Cav', 'infantry', 5, 6, 2, '1_5_fresh.png', '1_5_spent.png')
+test_unit2 = JapaneseUnit('clear', 'ambush', 3, 'clear_front.png', 'clear_ambush_3.png')
 
 
 def main():
@@ -26,7 +27,8 @@ def main():
         screen.blit(game_board, (0,0))
         screen.blit(surface, (0,0))
 
-        test_unit.draw(surface) # remove this
+        test_unit1.draw(surface) # remove this
+        test_unit2.draw(surface)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
