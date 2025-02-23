@@ -1,7 +1,8 @@
 import os
 import pygame
+import random
 from constants import *
-from pieces import AmericanUnit, JapaneseUnit
+from pieces import AmericanUnit, JapaneseUnit, create_units
 
 # pygame setup
 pygame.init()
@@ -15,8 +16,11 @@ surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA) # need 
 clock = pygame.time.Clock()
 
 # remove this test unit
-test_unit1 = AmericanUnit('1_5', '1st Cav', 'infantry', 5, 6, 2, '1_5_fresh.png', '1_5_spent.png')
-test_unit2 = JapaneseUnit('clear', 'ambush', 3, 'clear_front.png', 'clear_ambush_3.png')
+american_units, japanese_units = create_units() 
+test_unit1 = random.choice(american_units)
+test_unit2 = random.choice(japanese_units)
+
+
 
 
 def main():
@@ -27,7 +31,8 @@ def main():
         screen.blit(game_board, (0,0))
         screen.blit(surface, (0,0))
 
-        test_unit1.draw(surface) # remove this
+        # test_unit1.draw(surface) # remove this
+        test_unit1.draw(surface)
         test_unit2.draw(surface)
 
         for event in pygame.event.get():
