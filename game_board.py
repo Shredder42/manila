@@ -12,7 +12,7 @@ class MapArea:
         self.control = control
         self.stack_limit = stack_limit
         self.contested = False
-        self.rect = pygame.Rect(self.x, self.y, 50, 50) # decide size
+        self.rect = pygame.Rect(self.x, self.y, 50, 50)
         self.stack_count = 0
         self.american_units = []
         self.japanese_unit = None # maybe a funtion to randomly pick the unit (this is currently in game.py)

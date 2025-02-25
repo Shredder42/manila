@@ -19,19 +19,10 @@ game_board = pygame.transform.smoothscale_by(game_board, 0.8)
 clock = pygame.time.Clock()
 
 # all testing areas - may get removed later
-american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban = create_units() 
+american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units() 
 test_unit1 = random.choice(american_units)
 # test_unit2 = random.choice(japanese_units)
-turns = [(1, 'February 6-8'),
-        (2, 'February 9-11'),
-        (3, 'February 12-14'),
-        (4, 'February 15-17'),
-        (5, 'February 18-20'),
-        (6, 'February 21-23'),
-        (7, 'February 24-26'),
-        (8, 'February 27-March 1'),
-        (9, 'March 2-4')
-        ]
+
 
 
 # move all this stuff later?
@@ -80,7 +71,12 @@ def main():
     while running:
         screen.fill(ESPRESSO)
         screen.blit(game_board, (0,0))
-        text_on_screen(1020, 20, f'Turn {turns[turn_index][0]}: {turns[turn_index][1]}, 1945', 'white', 30)
+        pygame.draw.rect(screen, BAY_COLOR, (30, 695, 230, 290))
+        for support_unit in support_units:
+            support_unit.draw(screen)
+        text_on_screen(90, 830, str(support_units[0].total), 'black', 30)
+        text_on_screen(90, 890, str(support_units[1].total), 'black', 30)
+        text_on_screen(1020, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
         # screen.blit(surface, (0,0)) # remove this if determine don't need
         pos = pygame.mouse.get_pos()
 
@@ -91,7 +87,7 @@ def main():
             if area.rect.collidepoint(pos):
                 # make everything below it's own function probably
                 # informational text
-                text_on_screen(1020, 80, f'Area {area.identifier}: {area.area_title}', 'white', 25)
+                text_on_screen(1020, 80, area.area_title, 'white', 25)
                 if area.identifier in (1, 2, 30):
                     text_on_screen(1030, 110, f'{area.control} controlled', 'white', 20)
                 else:
@@ -109,6 +105,15 @@ def main():
                 # display american_units
                 for unit in area.american_units:
                     unit.draw(screen)
+
+        for support_unit in support_units:
+            if support_unit.rect.collidepoint(pos):
+                text_on_screen(1020, 80, support_unit.type.title(), 'white', 25)
+                text_on_screen(1030, 110, f'Adds +{support_unit.attack} Attack Value', 'white', 20)
+                text_on_screen(1030, 130, f'Supply Cost: {support_unit.cost} Point(s)', 'white', 20)
+                if support_unit.type == 'engineer support':
+                    message = 'Required for Combined Arms Bonus in Urban and Fort Areas.'
+                    text_on_screen(1030, 150, message, 'white', 20)
 
 
         for event in pygame.event.get():

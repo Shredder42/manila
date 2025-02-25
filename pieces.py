@@ -76,6 +76,33 @@ class JapaneseUnit:
         else:
             surface.blit(self.revealed_image, self.rect)
 
+class SupportUnit:
+    def __init__(self, x, y, type, total, attack, cost, filename):
+        self.type = type
+        self.total = total
+        self.attack = attack
+        self.cost = cost
+        self.filename = filename
+        self.image = self.__load_image()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def __load_image(self):
+        '''
+        load supply image
+        '''
+        image = pygame.image.load(f'./images/{self.filename}')
+        image = pygame.transform.smoothscale(image, (50,50))
+        return image
+    
+    def draw(self, surface):
+        '''
+        draw unit on board or table
+        '''
+        surface.blit(self.image, self.rect)
+
+
 def create_units():
     '''
     create units for both sides and return in a list
@@ -190,4 +217,9 @@ def create_units():
     japanese_units_urban.append(JapaneseUnit('urban', 'sniper', 8, 'urban_sniper_8.png', 'urban_front.png'))
     japanese_units_urban.append(JapaneseUnit('urban', 'sniper', 9, 'urban_sniper_9.png', 'urban_front.png'))
 
-    return american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban
+    support_units = []
+    support_units.append(SupportUnit(32, 815, 'artillery support', 0, 1, 1, 'artillery_support_front.png'))
+    support_units.append(SupportUnit(32, 875, 'engineer support', 0, 2, 2, 'engineer_support_front.png'))
+
+    return american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units
+
