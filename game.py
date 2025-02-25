@@ -42,13 +42,26 @@ def add_japanese_units(map_areas, terrain, area_units):
             area.japanese_unit = unit
             area_units.remove(unit)
 
+def add_american_units(map_areas, american_units):
+    for area in map_areas:
+        for unit in american_units:
+            if unit.setup == area.identifier and not unit.reinforcement:
+                area.american_units.append(unit)
+        area.update_american_unit_positions()
+
+
+
 map_areas = create_map()
+american_setup_map_areas = [map_areas[0], map_areas[1], map_areas[29]]
 add_japanese_units(map_areas, 'clear', japanese_units_clear)
 add_japanese_units(map_areas, 'fort', japanese_units_fort)
 add_japanese_units(map_areas, 'urban', japanese_units_urban)
+add_american_units(american_setup_map_areas, american_units)
 
-print(map_areas[3].japanese_unit.terrain)
-print(map_areas[35].japanese_unit.terrain)
+# print(map_areas[3].japanese_unit.terrain)
+# print(map_areas[35].japanese_unit.terrain)
+# print(map_areas[1].american_units)
+# print(map_areas[1].american_units[3].rect.x)
 
 
 def text_on_screen(x, y, message, color, size):
@@ -80,13 +93,22 @@ def main():
                 # informational text
                 text_on_screen(1020, 80, f'Area {area.identifier}: {area.area_title}', 'white', 25)
                 if area.identifier in (1, 2, 30):
-                    text_on_screen(1030, 110, f'Control: {area.control}', 'white', 20)
+                    text_on_screen(1030, 110, f'{area.control} controlled', 'white', 20)
                 else:
-                    text_on_screen(1030, 110, f'Control: {area.control}', 'white', 20)
-                    text_on_screen(1030, 130, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', 20)
+                    if area.contested:
+                        text_on_screen(1030, 110, f'{area.control} controlled', 'white', 20)
+                        text_on_screen(1030, 130, 'Area Contested!', 'red', 20)
+                        text_on_screen(1030, 150, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', 20)
+                    else:
+                        text_on_screen(1030, 110, f'{area.control} controlled', 'white', 20)
+                        text_on_screen(1030, 130, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', 20)
                 
-                    # display japanese_unit
+                # display japanese_unit
+                if area.japanese_unit:
                     area.japanese_unit.draw(screen)
+                # display american_units
+                for unit in area.american_units:
+                    unit.draw(screen)
 
 
         for event in pygame.event.get():

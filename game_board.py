@@ -11,10 +11,22 @@ class MapArea:
         self.adjacent_areas = adjacent_areas
         self.control = control
         self.stack_limit = stack_limit
+        self.contested = False
         self.rect = pygame.Rect(self.x, self.y, 50, 50) # decide size
         self.stack_count = 0
         self.american_units = []
-        self.japanese_unit = None # maybe a funtion to randomly pick the unit
+        self.japanese_unit = None # maybe a funtion to randomly pick the unit (this is currently in game.py)
+
+    def update_american_unit_positions(self):
+        for index, unit in enumerate(self.american_units):
+            unit.rect.x = 1020 + ((index % 6) * 60)
+            if index <= 5:
+                unit.rect.y = 350
+            elif index >=6 and index <= 11:
+                unit.rect.y = 410
+            else:
+                unit.rect.y = 470
+            
 
 
 def create_map():

@@ -13,14 +13,14 @@ class AmericanUnit:
         self.setup = setup
         self.unit_fresh_image_filename = unit_fresh_image_filename
         self.unit_spent_image_filename = unit_spent_image_filename
-        self.reinforcment = reinforcement
+        self.reinforcement = reinforcement
         self.leader = leader
         self.fresh_image = self.__load_images()[0]
         self.spent_image = self.__load_images()[1]
         self.fresh = True
         self.rect = self.fresh_image.get_rect()
-        self.rect.x = 1400 # x,y coordinates will be updated later
-        self.rect.y = 100
+        self.rect.x = 0
+        self.rect.y = 0
         self.out_of_action = False
         self.moving = False
 
@@ -55,7 +55,7 @@ class JapaneseUnit:
         self.revealed = False
         self.rect = self.unrevealed_image.get_rect()
         self.rect.x = 1020
-        self.rect.y = 160
+        self.rect.y = 200
 
     def __load_images(self):
         '''
