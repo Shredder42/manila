@@ -18,6 +18,10 @@ class MapArea:
         self.japanese_unit = None # maybe a funtion to randomly pick the unit (this is currently in game.py)
 
     def update_american_unit_positions(self):
+        '''
+        updates the rect values in the american_units list so they are always displayed beginning
+        from the top left corner
+        '''
         for index, unit in enumerate(self.american_units):
             unit.rect.x = 1020 + ((index % 6) * 60)
             if index <= 5:

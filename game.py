@@ -2,12 +2,16 @@ import os
 import pygame
 import random
 from constants import *
-from pieces import AmericanUnit, JapaneseUnit, create_units
+from pieces import AmericanUnit, JapaneseUnit, create_units, create_morale
 from game_board import MapArea, create_map
 
 # pygame setup
 pygame.init()
 pygame.font.init()
+
+
+# To Do
+    # move the message center to lower right corner and everything else up?
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Manila - The Savage Streets, 1945')
@@ -20,6 +24,7 @@ clock = pygame.time.Clock()
 
 # all testing areas - may get removed later
 american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units() 
+morale = create_morale()
 test_unit1 = random.choice(american_units)
 # test_unit2 = random.choice(japanese_units)
 
@@ -27,6 +32,9 @@ test_unit1 = random.choice(american_units)
 
 # move all this stuff later?
 def add_japanese_units(map_areas, terrain, area_units):
+    '''
+    adds Japanese units to the map, randomly selecting Area for each terrain
+    '''
     for area in map_areas:
         if area.terrain == terrain:
             unit = random.choice(area_units)       
@@ -34,6 +42,9 @@ def add_japanese_units(map_areas, terrain, area_units):
             area_units.remove(unit)
 
 def add_american_units(map_areas, american_units):
+    '''
+    adds starting Amercian units to the map in designated Areas
+    '''
     for area in map_areas:
         for unit in american_units:
             if unit.setup == area.identifier and not unit.reinforcement:
@@ -74,6 +85,8 @@ def main():
         pygame.draw.rect(screen, BAY_COLOR, (30, 695, 230, 290))
         for support_unit in support_units:
             support_unit.draw(screen)
+        morale.draw(screen)
+        text_on_screen(90, 770, str(morale.total), 'black', 30)
         text_on_screen(90, 830, str(support_units[0].total), 'black', 30)
         text_on_screen(90, 890, str(support_units[1].total), 'black', 30)
         text_on_screen(1020, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
@@ -109,11 +122,25 @@ def main():
         for support_unit in support_units:
             if support_unit.rect.collidepoint(pos):
                 text_on_screen(1020, 80, support_unit.type.title(), 'white', 25)
-                text_on_screen(1030, 110, f'Adds +{support_unit.attack} Attack Value', 'white', 20)
+                text_on_screen(1030, 110, f'+{support_unit.attack} to Attack Value', 'white', 20)
                 text_on_screen(1030, 130, f'Supply Cost: {support_unit.cost} Point(s)', 'white', 20)
                 if support_unit.type == 'engineer support':
-                    message = 'Required for Combined Arms Bonus in Urban and Fort Areas.'
-                    text_on_screen(1030, 150, message, 'white', 20)
+                    support_unit_message = 'Required for Combined Arms Bonus in Urban and Fort Areas.'
+                    text_on_screen(1030, 150, support_unit_message, 'white', 20)
+
+        if morale.rect.collidepoint(pos):
+            morale_message_1 = '+1 to Attack Value if Strong'
+            morale_message_2 = '+1 to Defense Value if Shaken'
+            morale_message_3 = 'Americans lose if Morale drops to 0 after any Combat Phase'
+            text_on_screen(1020, 80, 'Moral', 'white', 25)
+            text_on_screen(1030, 110, morale_message_1, 'white', 20)
+            text_on_screen(1030, 130, morale_message_2, 'white', 20)
+            if morale.total > 3:
+                text_on_screen(1030, 150, morale_message_3, 'white', 20)
+            else:
+                text_on_screen(1030, 150, morale_message_3, 'red', 20)
+
+            
 
 
         for event in pygame.event.get():

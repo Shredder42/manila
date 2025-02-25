@@ -77,7 +77,7 @@ class JapaneseUnit:
             surface.blit(self.revealed_image, self.rect)
 
 class SupportUnit:
-    def __init__(self, x, y, type, total, attack, cost, filename):
+    def __init__(self, type, total, attack, cost, filename, x, y):
         self.type = type
         self.total = total
         self.attack = attack
@@ -101,6 +101,49 @@ class SupportUnit:
         draw unit on board or table
         '''
         surface.blit(self.image, self.rect)
+
+class Morale:
+    def __init__(self, strong_filename, shaken_filename):
+        self.strong_filename = strong_filename
+        self.shaken_filename = shaken_filename
+        self.strong_image = self.__load_images()[0]
+        self.shaken_image = self.__load_images()[1]
+        self.rect = self.strong_image.get_rect()
+        self.rect.x = 32
+        self.rect.y = 755
+        self.total = 19
+        self.shaken = False
+
+    def __load_images(self):
+        '''
+        load the images for morale marker
+        '''
+        strong_image = pygame.image.load(f'./images/{self.strong_filename}')
+        strong_image = pygame.transform.smoothscale(strong_image, (50,50))
+        shaken_image = pygame.image.load(f'./images/{self.shaken_filename}')
+        shaken_image = pygame.transform.smoothscale(shaken_image, (50,50))
+        return strong_image, shaken_image
+    
+    
+    def draw(self, surface):
+        '''
+        draw morale image to the screen
+        '''
+        if not self.shaken:
+            surface.blit(self.strong_image, self.rect)
+        else:
+            surface.blit(self.shaken_image, self.rect)
+
+    def adjust_morale(self, amount):
+        '''
+        adjusts morale and strong/shaken status
+        '''
+        self.total += amount
+
+        if self.total <= 9:
+            self.shaken = True
+        else:
+            self.shaken = False
 
 
 def create_units():
@@ -218,8 +261,10 @@ def create_units():
     japanese_units_urban.append(JapaneseUnit('urban', 'sniper', 9, 'urban_sniper_9.png', 'urban_front.png'))
 
     support_units = []
-    support_units.append(SupportUnit(32, 815, 'artillery support', 0, 1, 1, 'artillery_support_front.png'))
-    support_units.append(SupportUnit(32, 875, 'engineer support', 0, 2, 2, 'engineer_support_front.png'))
+    support_units.append(SupportUnit('artillery support', 0, 1, 1, 'artillery_support_front.png', 32, 815))
+    support_units.append(SupportUnit('engineer support', 0, 2, 2, 'engineer_support_front.png', 32, 875))
 
     return american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units
 
+def create_morale():
+    return Morale('morale_strong.png', 'morale_shaken.png')
