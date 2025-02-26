@@ -77,9 +77,9 @@ class JapaneseUnit:
             surface.blit(self.revealed_image, self.rect)
 
 class SupportUnit:
-    def __init__(self, type, total, attack, cost, filename, x, y):
+    def __init__(self, type, count, attack, cost, filename, x, y):
         self.type = type
-        self.total = total
+        self.count = count
         self.attack = attack
         self.cost = cost
         self.filename = filename
@@ -111,7 +111,7 @@ class Morale:
         self.rect = self.strong_image.get_rect()
         self.rect.x = 32
         self.rect.y = 755
-        self.total = 19
+        self.count = 19
         self.shaken = False
 
     def __load_images(self):
@@ -138,9 +138,9 @@ class Morale:
         '''
         adjusts morale and strong/shaken status
         '''
-        self.total += amount
+        self.count += amount
 
-        if self.total <= 9:
+        if self.count <= 9:
             self.shaken = True
         else:
             self.shaken = False
@@ -163,6 +163,38 @@ class ControlMarker:
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+class Supply:
+    def __init__(self):
+        self.filepath = './images/supply_1.png'
+        self.image = self.__load_image()
+        self.rect = self.image.get_rect()
+        self.rect.x = 32
+        self.rect.y = 935
+        self.count = 0
+
+    def __load_image(self):
+        image = pygame.image.load(self.filepath)
+        image = pygame.transform.smoothscale(image, UNIT_SIZE)
+        return image
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+    def add_supply(self, amount_received):
+        '''
+        adds the amount of supply received to that available suppy
+        '''
+        self.count += amount_received
+
+    def spend_supply(self, item_purchased):
+        '''
+        subtacts amount of supply available when supply is spent
+        '''
+        if self.count >= SUPPLY_COSTS[item_purchased]:
+            self.count -= SUPPLY_COSTS[item_purchased]
+        # figure out message and how this will work
+        # else:
+        #     text_on_screen()
 
 def create_units():
     '''
@@ -289,3 +321,6 @@ def create_morale():
 
 def create_control_marker(x, y):
     return ControlMarker(x, y)
+
+def create_supply():
+    return Supply()
