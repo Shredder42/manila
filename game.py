@@ -68,12 +68,43 @@ def text_on_screen(x, y, message, color, size):
     text_rect.y = y
     screen.blit(text, text_rect)
 
+def remove_from_action(unit, area, out_of_action_units):
+    '''
+    remove American unit from action to out of action as a result of battle
+    '''
+    area.american_units.remove(unit)
+    area.update_american_unit_positions()
+    unit.out_of_action = True
+    out_of_action_units.append(unit)
+    update_out_of_action_unit_positions(out_of_action_units)
+
+    return out_of_action_units
+
+def update_out_of_action_unit_positions(out_of_action_units):
+    '''
+    updates the rect values in the American units when they are added or removed from 
+    out of action
+    '''
+    for index, unit in enumerate(out_of_action_units):
+        unit.rect.x = LEFT_EDGE_X + ((index % 6) * 60)
+        if index <= 5:
+            unit.rect.y = OUT_OF_ACTION_Y1 
+        elif index >=6 and index <= 11:
+            unit.rect.y = OUT_OF_ACTION_Y2
+        elif index >= 11 and index <= 17:
+            unit.rect.y = OUT_OF_ACTION_Y3
+        else:
+            unit.rect.y = OUT_OF_ACTION_Y4
+
+
+
 
 def main():
     running = True
     turn_index = 0 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase (one below actual turn number)
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
+    out_of_action_units = []
 
     while running:
         screen.fill(ESPRESSO)
@@ -82,6 +113,7 @@ def main():
         text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
         text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', 30)
         text_on_screen(LEFT_EDGE_X, 80, f'Event:', 'white', 30) # placeholding for now -> Update
+        text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', 30)
         legend_control_marker.draw(screen)
         for support_unit in support_units:
             support_unit.draw(screen)
@@ -92,6 +124,8 @@ def main():
         text_on_screen(90, 830, str(support_units[0].count), 'black', 30)
         text_on_screen(90, 890, str(support_units[1].count), 'black', 30)
         text_on_screen(90, 950, str(supply.count), 'black', 30)
+        for unit in out_of_action_units:
+            unit.draw(screen)
         # screen.blit(surface, (0,0)) # remove this if determine don't need
         pos = pygame.mouse.get_pos()
 
@@ -167,6 +201,10 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(pos)
+
+                # this is a test of out_of_action_units - remove later and update code
+                if map_areas[0].rect.collidepoint(pos):
+                    out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
 
         pygame.display.flip() # flip the display to put changes on screen
 

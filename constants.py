@@ -31,8 +31,15 @@ SUPPLY_COSTS = {
     'increase morale': 3
 }
 
-# text
 LEFT_EDGE_X = 1020
+
+# out of action y pixel value
+OUT_OF_ACTION_Y1 = 705
+OUT_OF_ACTION_Y2 = 765
+OUT_OF_ACTION_Y3 = 825
+OUT_OF_ACTION_Y4 = 885
+
+# text pixel values
 LEFT_EDGE_INDENTED_X = 1030
 HEADER_ROW_Y = 120
 ROW_1_Y = 150
