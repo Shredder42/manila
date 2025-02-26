@@ -104,17 +104,17 @@ def main():
             if area.rect.collidepoint(pos):
                 # make everything below it's own function probably
                 # informational text
-                text_on_screen(1020, 80, area.area_title, 'white', 25)
+                text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, area.area_title, 'white', 25)
                 if area.identifier in (1, 2, 30):
-                    text_on_screen(1030, 110, f'{area.control} controlled', 'white', 20)
+                    text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', 20)
                 else:
                     if area.contested:
-                        text_on_screen(1030, 110, f'{area.control} controlled', 'white', 20)
-                        text_on_screen(1030, 130, 'Area Contested!', 'red', 20)
-                        text_on_screen(1030, 150, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', 20)
+                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', 20)
+                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, 'Area Contested!', 'red', 20)
+                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', 20)
                     else:
-                        text_on_screen(1030, 110, f'{area.control} controlled', 'white', 20)
-                        text_on_screen(1030, 130, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', 20)
+                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', 20)
+                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', 20)
                 
                 # display japanese_unit
                 if area.japanese_unit:
@@ -126,35 +126,32 @@ def main():
         if legend_control_marker.rect.collidepoint(pos):
             control_message_1 = 'Automatic Victory if every Area is American controlled'
             control_message_2 = 'Operational Victory if Americans control:'
-            text_on_screen(1020, 80, f'Areas controlled by American Forces', 'white', 25)
-            text_on_screen(1020, 110, control_message_1, 'white', 20)
-            text_on_screen(1020, 130, control_message_2, 'white', 20)
-            text_on_screen(1020, 150, '- At least 34 Areas', 'white', 20)
-            text_on_screen(1020, 170, '- Intramuros (Area 34)', 'white', 20)
+            text_on_screen(LEFT_EDGE_X, 80, f'Areas controlled by American Forces', 'white', 25)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, control_message_1, 'white', 20)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, control_message_2, 'white', 20)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, '- At least 34 Areas', 'white', 20)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_4_Y, '- Intramuros (Area 37)', 'white', 20)
 
         for support_unit in support_units:
             if support_unit.rect.collidepoint(pos):
-                text_on_screen(1020, 80, support_unit.type.title(), 'white', 25)
-                text_on_screen(1030, 110, f'+{support_unit.attack} to Attack Value', 'white', 20)
-                text_on_screen(1030, 130, f'Supply Cost: {support_unit.cost} Point(s)', 'white', 20)
+                text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, support_unit.type.title(), 'white', 25)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'+{support_unit.attack} to Attack Value', 'white', 20)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'Supply Cost: {support_unit.cost} Point(s)', 'white', 20)
                 if support_unit.type == 'engineer support':
                     support_unit_message = 'Required for Combined Arms Bonus in Urban and Fort Areas'
-                    text_on_screen(1030, 150, support_unit_message, 'white', 20)
+                    text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, support_unit_message, 'white', 20)
 
         if morale.rect.collidepoint(pos):
             morale_message_1 = '+1 to Attack Value if Strong'
             morale_message_2 = '+1 to Defense Value if Shaken'
             morale_message_3 = 'Americans lose if Morale drops to 0 after any Combat Phase'
-            text_on_screen(1020, 80, 'Moral', 'white', 25)
-            text_on_screen(1030, 110, morale_message_1, 'white', 20)
-            text_on_screen(1030, 130, morale_message_2, 'white', 20)
+            text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, 'Morale', 'white', 25)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, morale_message_1, 'white', 20)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, morale_message_2, 'white', 20)
             if morale.total > 3:
-                text_on_screen(1030, 150, morale_message_3, 'white', 20)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, morale_message_3, 'white', 20)
             else:
-                text_on_screen(1030, 150, morale_message_3, 'red', 20)
-
-            
-
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, morale_message_3, 'red', 20)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

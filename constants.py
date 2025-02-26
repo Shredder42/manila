@@ -21,6 +21,15 @@ TURNS = [(1, 'February 6-8'),
         (9, 'March 2-4')
         ]
 
+# text
+LEFT_EDGE_X = 1020
+LEFT_EDGE_INDENTED_X = 1030
+HEADER_ROW_Y = 80
+ROW_1_Y = 110
+ROW_2_Y = 130
+ROW_3_Y = 150
+ROW_4_Y = 170
+
 # couldn't get these to go into the units class
 # unit_type = Enum('Unittype', ['INFANTRY', 'ARMOR', 'LEADER'])
 # organization = Enum('Organization', ['37TH_INF', '1ST_CAV', '11TH_AIR'])
