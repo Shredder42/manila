@@ -196,6 +196,26 @@ class Supply:
         # else:
         #     text_on_screen()
 
+class Event():
+    def __init__(self, type, weight, filename):
+        self.type = type
+        self.weight = weight
+        self.filename = filename
+        self.image = self.__load_image()
+        self.rect = self.image.get_rect()
+        self.rect.x = 1100
+        self.rect.y = 80
+
+    def __load_image(self):
+        image = pygame.image.load(f'./images/{self.filename}')
+        image = pygame.transform.smoothscale(image, UNIT_SIZE)
+        return image
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+
+
 def create_units():
     '''
     create units for both sides and return in a list
@@ -324,3 +344,19 @@ def create_control_marker(x, y):
 
 def create_supply():
     return Supply()
+
+def create_events():
+    events = []
+    events.append(Event('Kembu Group Breakthrough', .0046, 'kembu_breakthrough.png'))
+    events.append(Event('Kembu Group Offensive', .0138, 'kembu_offensive.png'))
+    events.append(Event('Pause 1st Cavalry', .0739, '1_cav_paused_front.png'))
+    events.append(Event('Pause 37th Division', .1666, '37_inf_paused_front.png'))
+    events.append(Event('Civilians and Refugees', .4814, 'civ_and_ref.png'))
+    events.append(Event('Pause 11th Airborne', .1666, '11_air_paused_front.png'))
+    events.append(Event('Iwabuchi Breakout', .0739, 'iwabuchi_breakout.png'))
+    events.append(Event('Shimbu Group Offensive', .0138, 'shimbu_offensive.png'))
+    events.append(Event('Shimbu Group Breakthrough', .0046, 'shimbu_breakthrough.png'))
+
+    event_weights = [event.weight for event in events]
+
+    return events, event_weights

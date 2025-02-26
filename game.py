@@ -2,7 +2,7 @@ import os
 import pygame
 import random
 from constants import *
-from pieces import AmericanUnit, JapaneseUnit, create_units, create_morale, create_control_marker, create_supply
+from pieces import AmericanUnit, JapaneseUnit, create_units, create_morale, create_control_marker, create_supply, create_events
 from game_board import MapArea, create_map
 
 # pygame setup
@@ -12,6 +12,7 @@ pygame.font.init()
 
 # To Do
     # move the message center to lower right corner and everything else up?
+    # all text below the event marker needs to come down (maybe don't resize event marker to keep smaller?)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Manila - The Savage Streets, 1945')
@@ -27,6 +28,7 @@ american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban,
 legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
 supply = create_supply()
+game_events, game_event_weights = create_events()
 test_unit1 = random.choice(american_units)
 # test_unit2 = random.choice(japanese_units)
 
@@ -96,6 +98,8 @@ def update_out_of_action_unit_positions(out_of_action_units):
         else:
             unit.rect.y = OUT_OF_ACTION_Y4
 
+def determine_game_event(game_events, game_event_weights):
+    return random.choices(game_events, weights=game_event_weights)[0]
 
 
 
@@ -105,6 +109,7 @@ def main():
     phase_index = 0 # this will increment at end of every phase (one below actual turn number)
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
+    game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
 
     while running:
         screen.fill(ESPRESSO)
@@ -119,6 +124,7 @@ def main():
             support_unit.draw(screen)
         morale.draw(screen)
         supply.draw(screen)
+        game_event.draw(screen)
         text_on_screen(90, 710, str(areas_controlled), 'black', 30)
         text_on_screen(90, 770, str(morale.count), 'black', 30)
         text_on_screen(90, 830, str(support_units[0].count), 'black', 30)
@@ -126,6 +132,7 @@ def main():
         text_on_screen(90, 950, str(supply.count), 'black', 30)
         for unit in out_of_action_units:
             unit.draw(screen)
+        
         # screen.blit(surface, (0,0)) # remove this if determine don't need
         pos = pygame.mouse.get_pos()
 
