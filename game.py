@@ -72,12 +72,16 @@ def text_on_screen(x, y, message, color, size):
 def main():
     running = True
     turn_index = 0 # this will increment at end of every turn (one below actual turn number)
+    phase_index = 0 # this will increment at end of every phase (one below actual turn number)
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
 
     while running:
         screen.fill(ESPRESSO)
         screen.blit(game_board, (0,0))
         pygame.draw.rect(screen, BAY_COLOR, (30, 695, 230, 290))
+        text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
+        text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', 30)
+        text_on_screen(LEFT_EDGE_X, 80, f'Event:', 'white', 30) # placeholding for now -> Update
         legend_control_marker.draw(screen)
         for support_unit in support_units:
             support_unit.draw(screen)
@@ -88,7 +92,6 @@ def main():
         text_on_screen(90, 830, str(support_units[0].count), 'black', 30)
         text_on_screen(90, 890, str(support_units[1].count), 'black', 30)
         text_on_screen(90, 950, str(supply.count), 'black', 30)
-        text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
         # screen.blit(surface, (0,0)) # remove this if determine don't need
         pos = pygame.mouse.get_pos()
 
@@ -121,7 +124,7 @@ def main():
         if legend_control_marker.rect.collidepoint(pos):
             control_message_1 = 'Automatic Victory if every Area is American controlled'
             control_message_2 = 'Operational Victory if Americans control:'
-            text_on_screen(LEFT_EDGE_X, 80, f'Areas controlled by American Forces', 'white', HEADER_SIZE)
+            text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, f'Areas controlled by American Forces', 'white', HEADER_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, control_message_1, 'white', LINE_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, control_message_2, 'white', LINE_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, '- At least 34 Areas', 'white', LINE_SIZE)

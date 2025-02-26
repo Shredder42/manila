@@ -21,6 +21,8 @@ TURNS = [(1, 'February 6-8'),
         (9, 'March 2-4')
         ]
 
+PHASES = ['Dawn', 'Event', 'Supply', 'Combat', 'End']
+
 SUPPLY_COSTS = {
     'artillery support': 1,
     'engineer support': 2,
@@ -32,13 +34,13 @@ SUPPLY_COSTS = {
 # text
 LEFT_EDGE_X = 1020
 LEFT_EDGE_INDENTED_X = 1030
-HEADER_ROW_Y = 80
-ROW_1_Y = 110
-ROW_2_Y = 130
-ROW_3_Y = 150
-ROW_4_Y = 170
-ROW_5_Y = 190
-ROW_6_Y = 210
+HEADER_ROW_Y = 120
+ROW_1_Y = 150
+ROW_2_Y = 170
+ROW_3_Y = 190
+ROW_4_Y = 210
+ROW_5_Y = 230
+ROW_6_Y = 250
 
 HEADER_SIZE = 25
 LINE_SIZE = 20

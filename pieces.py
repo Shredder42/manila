@@ -55,7 +55,7 @@ class JapaneseUnit:
         self.revealed = False
         self.rect = self.unrevealed_image.get_rect()
         self.rect.x = 1020
-        self.rect.y = 200
+        self.rect.y = 200 # may want to bump this down a smidge
 
     def __load_images(self):
         '''
