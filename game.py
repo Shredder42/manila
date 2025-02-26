@@ -2,7 +2,7 @@ import os
 import pygame
 import random
 from constants import *
-from pieces import AmericanUnit, JapaneseUnit, create_units, create_morale
+from pieces import AmericanUnit, JapaneseUnit, create_units, create_morale, create_control_marker
 from game_board import MapArea, create_map
 
 # pygame setup
@@ -24,6 +24,7 @@ clock = pygame.time.Clock()
 
 # all testing areas - may get removed later
 american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units() 
+legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
 test_unit1 = random.choice(american_units)
 # test_unit2 = random.choice(japanese_units)
@@ -77,15 +78,18 @@ def text_on_screen(x, y, message, color, size):
 
 def main():
     running = True
-    turn_index = 0 # this will increment at end of every turn (one below actual turn number) 
+    turn_index = 0 # this will increment at end of every turn (one below actual turn number)
+    areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
 
     while running:
         screen.fill(ESPRESSO)
         screen.blit(game_board, (0,0))
         pygame.draw.rect(screen, BAY_COLOR, (30, 695, 230, 290))
+        legend_control_marker.draw(screen)
         for support_unit in support_units:
             support_unit.draw(screen)
         morale.draw(screen)
+        text_on_screen(90, 710, str(areas_controlled), 'black', 30)
         text_on_screen(90, 770, str(morale.total), 'black', 30)
         text_on_screen(90, 830, str(support_units[0].total), 'black', 30)
         text_on_screen(90, 890, str(support_units[1].total), 'black', 30)
@@ -119,13 +123,22 @@ def main():
                 for unit in area.american_units:
                     unit.draw(screen)
 
+        if legend_control_marker.rect.collidepoint(pos):
+            control_message_1 = 'Automatic Victory if every Area is American controlled'
+            control_message_2 = 'Operational Victory if Americans control:'
+            text_on_screen(1020, 80, f'Areas controlled by American Forces', 'white', 25)
+            text_on_screen(1020, 110, control_message_1, 'white', 20)
+            text_on_screen(1020, 130, control_message_2, 'white', 20)
+            text_on_screen(1020, 150, '- At least 34 Areas', 'white', 20)
+            text_on_screen(1020, 170, '- Intramuros (Area 34)', 'white', 20)
+
         for support_unit in support_units:
             if support_unit.rect.collidepoint(pos):
                 text_on_screen(1020, 80, support_unit.type.title(), 'white', 25)
                 text_on_screen(1030, 110, f'+{support_unit.attack} to Attack Value', 'white', 20)
                 text_on_screen(1030, 130, f'Supply Cost: {support_unit.cost} Point(s)', 'white', 20)
                 if support_unit.type == 'engineer support':
-                    support_unit_message = 'Required for Combined Arms Bonus in Urban and Fort Areas.'
+                    support_unit_message = 'Required for Combined Arms Bonus in Urban and Fort Areas'
                     text_on_screen(1030, 150, support_unit_message, 'white', 20)
 
         if morale.rect.collidepoint(pos):

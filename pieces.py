@@ -29,9 +29,9 @@ class AmericanUnit:
         load the images for each unit
         '''
         fresh_image = pygame.image.load(f'./images/{self.unit_fresh_image_filename}')
-        fresh_image = pygame.transform.smoothscale(fresh_image, (50,50))
+        fresh_image = pygame.transform.smoothscale(fresh_image, UNIT_SIZE)
         spent_image = pygame.image.load(f'./images/{self.unit_spent_image_filename}')
-        spent_image = pygame.transform.smoothscale(spent_image, (50,50))
+        spent_image = pygame.transform.smoothscale(spent_image, UNIT_SIZE)
         return fresh_image, spent_image
     
     def draw(self, surface):
@@ -62,9 +62,9 @@ class JapaneseUnit:
         load the images for each unit
         '''
         unrevealed_image = pygame.image.load(f'./images/{self.unit_unrevealed_filename}')
-        unrevealed_image = pygame.transform.smoothscale(unrevealed_image, (50,50))
+        unrevealed_image = pygame.transform.smoothscale(unrevealed_image, UNIT_SIZE)
         revealed_image = pygame.image.load(f'./images/{self.unit_revealed_filename}')
-        revealed_image = pygame.transform.smoothscale(revealed_image, (50,50))
+        revealed_image = pygame.transform.smoothscale(revealed_image, UNIT_SIZE)
         return unrevealed_image, revealed_image
     
     def draw(self, surface):
@@ -93,7 +93,7 @@ class SupportUnit:
         load supply image
         '''
         image = pygame.image.load(f'./images/{self.filename}')
-        image = pygame.transform.smoothscale(image, (50,50))
+        image = pygame.transform.smoothscale(image, UNIT_SIZE)
         return image
     
     def draw(self, surface):
@@ -103,9 +103,9 @@ class SupportUnit:
         surface.blit(self.image, self.rect)
 
 class Morale:
-    def __init__(self, strong_filename, shaken_filename):
-        self.strong_filename = strong_filename
-        self.shaken_filename = shaken_filename
+    def __init__(self):
+        self.strong_filepath = './images/morale_strong.png'
+        self.shaken_filepath = './images/morale_shaken.png'
         self.strong_image = self.__load_images()[0]
         self.shaken_image = self.__load_images()[1]
         self.rect = self.strong_image.get_rect()
@@ -118,10 +118,10 @@ class Morale:
         '''
         load the images for morale marker
         '''
-        strong_image = pygame.image.load(f'./images/{self.strong_filename}')
-        strong_image = pygame.transform.smoothscale(strong_image, (50,50))
-        shaken_image = pygame.image.load(f'./images/{self.shaken_filename}')
-        shaken_image = pygame.transform.smoothscale(shaken_image, (50,50))
+        strong_image = pygame.image.load(self.strong_filepath)
+        strong_image = pygame.transform.smoothscale(strong_image, UNIT_SIZE)
+        shaken_image = pygame.image.load(self.shaken_filepath)
+        shaken_image = pygame.transform.smoothscale(shaken_image, UNIT_SIZE)
         return strong_image, shaken_image
     
     
@@ -144,6 +144,24 @@ class Morale:
             self.shaken = True
         else:
             self.shaken = False
+
+class ControlMarker:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.filepath = './images/control_front.png'
+        self.image = self.__load_image()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def __load_image(self):
+        image = pygame.image.load(self.filepath)
+        image = pygame.transform.smoothscale(image, UNIT_SIZE)
+        return image
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
 
 
 def create_units():
@@ -267,4 +285,7 @@ def create_units():
     return american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units
 
 def create_morale():
-    return Morale('morale_strong.png', 'morale_shaken.png')
+    return Morale()
+
+def create_control_marker(x, y):
+    return ControlMarker(x, y)

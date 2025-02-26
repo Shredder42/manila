@@ -8,6 +8,8 @@ BAY_COLOR = (205, 210, 188)
 
 FRAME_RATE = 60
 
+UNIT_SIZE = (50,50)
+
 TURNS = [(1, 'February 6-8'),
         (2, 'February 9-11'),
         (3, 'February 12-14'),
