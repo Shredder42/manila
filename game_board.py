@@ -25,11 +25,11 @@ class MapArea:
         for index, unit in enumerate(self.american_units):
             unit.rect.x = 1020 + ((index % 6) * 60)
             if index <= 5:
-                unit.rect.y = 350
+                unit.rect.y = 370
             elif index >=6 and index <= 11:
-                unit.rect.y = 410
+                unit.rect.y = 430
             else:
-                unit.rect.y = 470
+                unit.rect.y = 490
             
 
 

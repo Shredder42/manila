@@ -30,7 +30,8 @@ morale = create_morale()
 supply = create_supply()
 game_events, game_event_weights = create_events()
 test_unit1 = random.choice(american_units)
-# test_unit2 = random.choice(japanese_units)
+test_unit2 = random.choice(japanese_units_clear)
+
 
 
 
@@ -61,6 +62,9 @@ add_japanese_units(map_areas, 'clear', japanese_units_clear)
 add_japanese_units(map_areas, 'fort', japanese_units_fort)
 add_japanese_units(map_areas, 'urban', japanese_units_urban)
 add_american_units(american_setup_map_areas, american_units)
+# these lines for testing - remove when done
+map_areas[0].japanese_unit = test_unit2 
+map_areas[2].contested = True
 
 def text_on_screen(x, y, message, color, size):
     font = pygame.font.SysFont('times new roman', size)
@@ -117,7 +121,7 @@ def main():
         pygame.draw.rect(screen, BAY_COLOR, (30, 695, 230, 290))
         text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
         text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', 30)
-        text_on_screen(LEFT_EDGE_X, 80, f'Event:', 'white', 30) # placeholding for now -> Update
+        text_on_screen(LEFT_EDGE_X, 90, f'Event:', 'white', 30) # placeholding for now -> Update
         text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', 30)
         legend_control_marker.draw(screen)
         for support_unit in support_units:
@@ -144,23 +148,22 @@ def main():
                 # make everything below it's own function probably
                 # informational text
                 text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, area.area_title, 'white', HEADER_SIZE)
-                if area.identifier in (1, 2, 30):
-                    text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', LINE_SIZE)
-                else:
-                    if area.contested:
-                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', LINE_SIZE)
-                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, 'Area Contested!', 'red', LINE_SIZE)
-                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', LINE_SIZE)
-                    else:
-                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', LINE_SIZE)
-                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', LINE_SIZE)
-                
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', LINE_SIZE)
+                if area.terrain:
+                    text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', LINE_SIZE)
+                if area.contested:
+                    text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, 'Area Contested!', 'red', LINE_SIZE)                    
+
+            
                 # display japanese_unit
                 if area.japanese_unit:
+                    text_on_screen(LEFT_EDGE_X, 245, 'Japanese Unit', 'white', LINE_SIZE)
                     area.japanese_unit.draw(screen)
                 # display american_units
-                for unit in area.american_units:
-                    unit.draw(screen)
+                if area.american_units:
+                    text_on_screen(LEFT_EDGE_X, 345, 'American Units', 'white', LINE_SIZE)
+                    for unit in area.american_units:
+                        unit.draw(screen)
 
         if legend_control_marker.rect.collidepoint(pos):
             control_message_1 = 'Automatic Victory if every Area is American controlled'

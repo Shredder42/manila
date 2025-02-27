@@ -55,7 +55,7 @@ class JapaneseUnit:
         self.revealed = False
         self.rect = self.unrevealed_image.get_rect()
         self.rect.x = 1020
-        self.rect.y = 200 # may want to bump this down a smidge
+        self.rect.y = 270 # may want to bump this down a smidge
 
     def __load_images(self):
         '''
@@ -204,7 +204,7 @@ class Event():
         self.image = self.__load_image()
         self.rect = self.image.get_rect()
         self.rect.x = 1100
-        self.rect.y = 80
+        self.rect.y = 85
 
     def __load_image(self):
         image = pygame.image.load(f'./images/{self.filename}')
