@@ -13,7 +13,6 @@ pygame.font.init()
 
 # To Do
     # move the message center to lower right corner and everything else up?
-    # all text below the event marker needs to come down (maybe don't resize event marker to keep smaller?)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Manila - The Savage Streets, 1945')
@@ -25,7 +24,7 @@ game_board = pygame.transform.smoothscale_by(game_board, 0.8)
 clock = pygame.time.Clock()
 
 # all testing areas - may get removed later
-american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units() 
+american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units()
 legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
 supply = create_supply()
@@ -106,21 +105,19 @@ def update_out_of_action_unit_positions(out_of_action_units):
 def determine_game_event(game_events, game_event_weights):
     return random.choices(game_events, weights=game_event_weights)[0]
 
-# remove this later
-# reinforcements = reinforcements(2, american_units, map_areas)
-# print(reinforcements)
-# for unit in reinforcements:
-#     print(unit.unit)
+
 
 
 def main():
     running = True
-    turn_index = 0 # this will increment at end of every turn (one below actual turn number)
+    selected_unit = None
+    turn_index = 5 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
     game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
-
+    reinforcement_units_2 = update_turn_2_reinforcement_coordinates(american_units)
+    
     while running:
         screen.fill(ESPRESSO)
         screen.blit(game_board, (0,0))
@@ -211,6 +208,20 @@ def main():
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_6_Y, f'- Increase Morale: {SUPPLY_COSTS["increase morale"]}', 'white', LINE_SIZE)
 
 
+        # reinforcement part of Dawn
+        # turn 2 reinforcements
+        if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
+            text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Available', 'white', HEADER_SIZE)
+            text_on_screen(LEFT_EDGE_X, 580, 'Select Units to add to American controlled Areas 27, 28, or 30', 'white', LINE_SIZE)
+            for unit in reinforcement_units_2:
+                unit.draw(screen)
+
+        # turn 6 reinforcements
+        if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
+            text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Arrived', 'white', HEADER_SIZE)
+            text_on_screen(LEFT_EDGE_X, 580, 'Click to deploy one Armor Unit to each Area 1 and 2', 'white', LINE_SIZE)
+
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -218,13 +229,29 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(pos)
 
+                # turn_index = 5
+
                 # this is a test of out_of_action_units - remove later and update code
                 if map_areas[0].rect.collidepoint(pos):
                     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
 
-                # this is also  test - remove later
-                turn_index = 5
-                reinforcements(TURNS[turn_index][0], american_units, map_areas)
+
+                # reinforcements
+                if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
+                    for unit in reinforcement_units_2:
+                        if unit.rect.collidepoint(pos):
+                            selected_unit = unit
+                            # print(f'selected unit: {selected_unit.unit}')
+
+                    if selected_unit:
+                        for area in map_areas:
+                            if area.rect.collidepoint(pos):
+                                selected_unit = place_turn_2_reinforcement_in_map_area(selected_unit, area, reinforcement_units_2)
+
+                if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
+                    place_turn_6_reinforcements(american_units, map_areas[:2])
+
+
 
         pygame.display.flip() # flip the display to put changes on screen
 

@@ -24,6 +24,7 @@ class AmericanUnit:
         self.rect.y = 0
         self.out_of_action = False
         self.moving = False
+        self.selected = False
 
     def __load_images(self):
         '''
