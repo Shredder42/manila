@@ -4,6 +4,7 @@ import random
 from constants import *
 from pieces import AmericanUnit, JapaneseUnit, create_units, create_morale, create_control_marker, create_supply, create_events
 from game_board import MapArea, create_map
+from manage_game import *
 
 # pygame setup
 pygame.init()
@@ -105,12 +106,17 @@ def update_out_of_action_unit_positions(out_of_action_units):
 def determine_game_event(game_events, game_event_weights):
     return random.choices(game_events, weights=game_event_weights)[0]
 
+# remove this later
+# reinforcements = reinforcements(2, american_units, map_areas)
+# print(reinforcements)
+# for unit in reinforcements:
+#     print(unit.unit)
 
 
 def main():
     running = True
     turn_index = 0 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 0 # this will increment at end of every phase (one below actual turn number)
+    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
     game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
@@ -215,6 +221,10 @@ def main():
                 # this is a test of out_of_action_units - remove later and update code
                 if map_areas[0].rect.collidepoint(pos):
                     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
+
+                # this is also  test - remove later
+                turn_index = 5
+                reinforcements(TURNS[turn_index][0], american_units, map_areas)
 
         pygame.display.flip() # flip the display to put changes on screen
 

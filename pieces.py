@@ -4,7 +4,7 @@ from constants import *
 class AmericanUnit:
     def __init__(self, unit, organization, unit_type, attack, 
                 move, setup, unit_fresh_image_filename, unit_spent_image_filename,
-                reinforcement = False, leader = False):
+                reinforcement = False, reinforcement_turn = None, leader = False):
         self.unit = unit
         self.organization = organization
         self.unit_type = unit_type
@@ -14,6 +14,7 @@ class AmericanUnit:
         self.unit_fresh_image_filename = unit_fresh_image_filename
         self.unit_spent_image_filename = unit_spent_image_filename
         self.reinforcement = reinforcement
+        self.reinforcement_turn = reinforcement_turn
         self.leader = leader
         self.fresh_image = self.__load_images()[0]
         self.spent_image = self.__load_images()[1]
@@ -227,16 +228,16 @@ def create_units():
     american_units.append(AmericanUnit('1_129', '37th Inf', 'infantry', 4, 6, 1, '1_129_fresh.png', '1_129_spent.png'))
     american_units.append(AmericanUnit('1_145', '37th Inf', 'infantry', 4, 6, 1, '1_145_fresh.png', '1_145_spent.png'))
     american_units.append(AmericanUnit('1_148', '37th Inf', 'infantry', 4, 6, 1, '1_148_fresh.png', '1_148_spent.png'))
-    american_units.append(AmericanUnit('1_187', '11th Air', 'infantry', 4, 4, [27, 28, 30], '1_187_fresh.png', '1_187_spent.png', True))
-    american_units.append(AmericanUnit('1_188', '11th Air', 'infantry', 4, 4, [27, 28, 30], '1_188_fresh.png', '1_188_spent.png', True))
+    american_units.append(AmericanUnit('1_187', '11th Air', 'infantry', 4, 4, [27, 28, 30], '1_187_fresh.png', '1_187_spent.png', True, 2))
+    american_units.append(AmericanUnit('1_188', '11th Air', 'infantry', 4, 4, [27, 28, 30], '1_188_fresh.png', '1_188_spent.png', True, 2))
     american_units.append(AmericanUnit('1_511', '11th Air', 'infantry', 4, 4, 30, '1_511_fresh.png', '1_511_spent.png'))
     american_units.append(AmericanUnit('2_7', '1st Cav', 'infantry', 5, 6, 2, '2_7_fresh.png', '2_7_spent.png'))
     american_units.append(AmericanUnit('2_8', '1st Cav', 'infantry', 5, 6, 2, '2_8_fresh.png', '2_8_spent.png'))
     american_units.append(AmericanUnit('2_129', '37th Inf', 'infantry', 4, 6, 1, '2_129_fresh.png', '2_129_spent.png'))
     american_units.append(AmericanUnit('2_145', '37th Inf', 'infantry', 4, 6, 1, '2_145_fresh.png', '2_145_spent.png'))
     american_units.append(AmericanUnit('2_148', '37th Inf', 'infantry', 4, 6, 1, '2_148_fresh.png', '2_148_spent.png'))
-    american_units.append(AmericanUnit('2_187', '11th Air', 'infantry', 4, 4, [27, 28, 30], '2_187_fresh.png', '2_187_spent.png', True))
-    american_units.append(AmericanUnit('2_188', '11th Air', 'infantry', 4, 4, [27, 28, 30], '2_188_fresh.png', '2_188_spent.png', True))
+    american_units.append(AmericanUnit('2_187', '11th Air', 'infantry', 4, 4, [27, 28, 30], '2_187_fresh.png', '2_187_spent.png', True, 2))
+    american_units.append(AmericanUnit('2_188', '11th Air', 'infantry', 4, 4, [27, 28, 30], '2_188_fresh.png', '2_188_spent.png', True, 2))
     american_units.append(AmericanUnit('2_511', '11th Air', 'infantry', 4, 4, 30, '2_511_fresh.png', '2_511_spent.png'))
     american_units.append(AmericanUnit('3_129', '37th Inf', 'infantry', 4, 6, 1, '3_129_fresh.png', '3_129_spent.png'))
     american_units.append(AmericanUnit('3_145', '37th Inf', 'infantry', 4, 6, 1, '3_145_fresh.png', '3_145_spent.png'))
@@ -249,16 +250,16 @@ def create_units():
     american_units.append(AmericanUnit('637_a', '37th Inf', 'armor', 6, 6, 1, '637_a_fresh.png', '637_a_spent.png'))
     american_units.append(AmericanUnit('637_b', '37th Inf', 'armor', 6, 6, 1, '637_b_fresh.png', '637_b_spent.png'))
     american_units.append(AmericanUnit('637_c', '37th Inf', 'armor', 6, 6, 1, '637_c_fresh.png', '637_c_spent.png'))
-    american_units.append(AmericanUnit('754_a', '37th Inf', 'armor', 7, 6, 1, '754_a_fresh.png', '754_a_spent.png', True))
-    american_units.append(AmericanUnit('754_b', '1st Cav', 'armor', 7, 6, 2, '754_b_fresh.png', '754_b_spent.png', True))
-    american_units.append(AmericanUnit('chase', '1st Cav', 'leader', None, 6, 2, 'chase_fresh.png', 'chase_spent.png', False, True))
-    american_units.append(AmericanUnit('fredrick', '37th Inf', 'leader', None, 6, 1, 'fredrick_fresh.png', 'fredrick_spent.png', False, True))
-    american_units.append(AmericanUnit('haugen', '11th Air', 'leader', None, 6, 30, 'haugen_fresh.png', 'haugen_spent.png', False, True))
-    american_units.append(AmericanUnit('hildenbrand', '11th Air', 'leader', None, 6, [27, 28, 30], 'hildebrand_fresh.png', 'hildebrand_spent.png', True, True))
-    american_units.append(AmericanUnit('hoffman', '1st Cav', 'leader', None, 6, 2, 'hoffman_fresh.png', 'hoffman_spent.png', False, True))
-    american_units.append(AmericanUnit('soule', '11th Air', 'leader', None, 6, [27, 28, 30], 'soule_fresh.png', 'soule_spent.png', True, True))
-    american_units.append(AmericanUnit('whitcomb', '37th Inf', 'leader', None, 6, 1, 'whitcomb_fresh.png', 'whitcomb_spent.png', False, True))
-    american_units.append(AmericanUnit('white', '37th Inf', 'leader', None, 6, 1, 'white_fresh.png', 'white_spent.png', False, True))
+    american_units.append(AmericanUnit('754_a', '37th Inf', 'armor', 7, 6, 1, '754_a_fresh.png', '754_a_spent.png', True, 6))
+    american_units.append(AmericanUnit('754_b', '1st Cav', 'armor', 7, 6, 2, '754_b_fresh.png', '754_b_spent.png', True, 6))
+    american_units.append(AmericanUnit('chase', '1st Cav', 'leader', None, 6, 2, 'chase_fresh.png', 'chase_spent.png', leader=True))
+    american_units.append(AmericanUnit('fredrick', '37th Inf', 'leader', None, 6, 1, 'fredrick_fresh.png', 'fredrick_spent.png', leader=True))
+    american_units.append(AmericanUnit('haugen', '11th Air', 'leader', None, 6, 30, 'haugen_fresh.png', 'haugen_spent.png', leader=True))
+    american_units.append(AmericanUnit('hildenbrand', '11th Air', 'leader', None, 6, [27, 28, 30], 'hildebrand_fresh.png', 'hildebrand_spent.png', True, 2, True))
+    american_units.append(AmericanUnit('hoffman', '1st Cav', 'leader', None, 6, 2, 'hoffman_fresh.png', 'hoffman_spent.png', leader=True))
+    american_units.append(AmericanUnit('soule', '11th Air', 'leader', None, 6, [27, 28, 30], 'soule_fresh.png', 'soule_spent.png', True, 2, True))
+    american_units.append(AmericanUnit('whitcomb', '37th Inf', 'leader', None, 6, 1, 'whitcomb_fresh.png', 'whitcomb_spent.png', leader=True))
+    american_units.append(AmericanUnit('white', '37th Inf', 'leader', None, 6, 1, 'white_fresh.png', 'white_spent.png', leader=True))
     
     # create Japanese units
     japanese_units_clear = []
