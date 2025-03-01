@@ -50,11 +50,17 @@ def place_turn_6_reinforcements(american_units, map_areas):
                 area.update_american_unit_positions()
 
 # withdrawal
-def withdrawal(turn, map_areas, out_of_action_units, permanent=False):
-    if turn == 6:
+def withdrawal(turn, map_areas, out_of_action_units, morale, unit, permanent=False):
         for area in map_areas:
-            for unit in area.american_units:
-                if unit.unit.startswith('44_'):
-                    area.american_units.remove(unit)                    
+            if unit in area.american_units[:]:
+                area.american_units.remove(unit)
+                area.update_american_unit_positions()
+        if unit in out_of_action_units[:]:
+            morale.adjust_morale(-1)
+            if permanent:
+                out_of_action_units.remove(unit)
+
+        if not permanent:
+            unit.reinforcemnt_turn = turn + 1                
 
             

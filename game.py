@@ -111,7 +111,7 @@ def determine_game_event(game_events, game_event_weights):
 def main():
     running = True
     selected_unit = None
-    turn_index = 5 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
@@ -220,6 +220,13 @@ def main():
         if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
             text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Arrived', 'white', HEADER_SIZE)
             text_on_screen(LEFT_EDGE_X, 580, 'Click to deploy one Armor Unit to each Area 1 and 2', 'white', LINE_SIZE)
+
+        
+            # mandatory withdrawal
+            units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
+            for unit in units_to_withdraw:
+                withdrawal(6, map_areas, out_of_action_units, morale, unit, True)          
+                update_out_of_action_unit_positions(out_of_action_units)
 
 
         for event in pygame.event.get():
