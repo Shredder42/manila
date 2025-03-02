@@ -36,7 +36,7 @@ test_unit2 = random.choice(japanese_units_clear)
 
 
 # move all this stuff later?
-def add_japanese_units(map_areas, terrain, area_units):
+def deploy_japanese_units(map_areas, terrain, area_units):
     '''
     adds Japanese units to the map, randomly selecting Area for each terrain
     '''
@@ -46,22 +46,21 @@ def add_japanese_units(map_areas, terrain, area_units):
             area.japanese_unit = unit
             area_units.remove(unit)
 
-def add_american_units(map_areas, american_units):
+def deploy_initial_american_units(map_areas, american_units):
     '''
     adds starting Amercian units to the map in designated Areas
     '''
     for area in map_areas:
         for unit in american_units:
             if unit.setup == area.identifier and not unit.reinforcement:
-                area.american_units.append(unit)
-        area.update_american_unit_positions()
+                area.add_unit_to_area(unit)
 
 map_areas = create_map()
+deploy_japanese_units(map_areas, 'clear', japanese_units_clear)
+deploy_japanese_units(map_areas, 'fort', japanese_units_fort)
+deploy_japanese_units(map_areas, 'urban', japanese_units_urban)
 american_setup_map_areas = [map_areas[0], map_areas[1], map_areas[29]]
-add_japanese_units(map_areas, 'clear', japanese_units_clear)
-add_japanese_units(map_areas, 'fort', japanese_units_fort)
-add_japanese_units(map_areas, 'urban', japanese_units_urban)
-add_american_units(american_setup_map_areas, american_units)
+deploy_initial_american_units(american_setup_map_areas, american_units)
 # these lines for testing - remove when done
 map_areas[0].japanese_unit = test_unit2 
 map_areas[2].contested = True
@@ -78,8 +77,7 @@ def remove_from_action(unit, area, out_of_action_units):
     '''
     remove American unit from action to out of action as a result of battle
     '''
-    area.american_units.remove(unit)
-    area.update_american_unit_positions()
+    area.remove_unit_from_area(unit)
     unit.out_of_action = True
     out_of_action_units.append(unit)
     update_out_of_action_unit_positions(out_of_action_units)
@@ -111,12 +109,12 @@ def determine_game_event(game_events, game_event_weights):
 def main():
     running = True
     selected_unit = None
-    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 4 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
     game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
-    reinforcement_units_2 = update_turn_2_reinforcement_coordinates(american_units)
+    # reinforcement_units_2 = update_turn_2_reinforcement_coordinates(american_units)
     
     while running:
         screen.fill(ESPRESSO)
@@ -225,7 +223,7 @@ def main():
             # mandatory withdrawal
             units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
             for unit in units_to_withdraw:
-                withdrawal(6, map_areas, out_of_action_units, morale, unit, True)          
+                withdrawal(6, unit, map_areas, out_of_action_units, morale, True)          
                 update_out_of_action_unit_positions(out_of_action_units)
 
 
@@ -241,7 +239,7 @@ def main():
                 # this is a test of out_of_action_units - remove later and update code
                 if map_areas[0].rect.collidepoint(pos):
                     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
-
+ 
 
                 # reinforcements
                 if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
