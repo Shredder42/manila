@@ -31,19 +31,19 @@ class MapArea:
             else:
                 unit.rect.y = 490
 
-    def add_unit_to_area(self, unit):
+    def add_unit_to_area(self, unit, ):
         if self.stack_count and (self.stack_count == self.stack_limit) and unit.type in ('infantry', 'armor'):
-            return 'Area already at Stacking Limit'
+            return 'Area at Stacking Limit'
         else:
             self.american_units.append(unit)
             self.stack_count += 1
             self.__update_american_unit_positions()
+            print('ran add unit to area')
 
     def remove_unit_from_area(self, unit):
         self.american_units.remove(unit)
         self.stack_count -= 1
         self.__update_american_unit_positions()
-        print('ran remove_unit_from_area()')
             
 
 

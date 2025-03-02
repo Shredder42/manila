@@ -109,12 +109,12 @@ def determine_game_event(game_events, game_event_weights):
 def main():
     running = True
     selected_unit = None
-    turn_index = 4 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
     game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
-    # reinforcement_units_2 = update_turn_2_reinforcement_coordinates(american_units)
+    # reinforcement_units = update_turn_2_reinforcement_coordinates(american_units)
     
     while running:
         screen.fill(ESPRESSO)
@@ -207,11 +207,14 @@ def main():
 
 
         # reinforcement part of Dawn
+        reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units)
+        # print(reinforcement_units)
+
         # turn 2 reinforcements
         if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
             text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Available', 'white', HEADER_SIZE)
             text_on_screen(LEFT_EDGE_X, 580, 'Select Units to add to American controlled Areas 27, 28, or 30', 'white', LINE_SIZE)
-            for unit in reinforcement_units_2:
+            for unit in reinforcement_units:
                 unit.draw(screen)
 
         # turn 6 reinforcements
@@ -237,21 +240,23 @@ def main():
                 # turn_index = 5
 
                 # this is a test of out_of_action_units - remove later and update code
-                if map_areas[0].rect.collidepoint(pos):
-                    out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
+                # if map_areas[0].rect.collidepoint(pos):
+                #     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
  
 
                 # reinforcements
                 if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
-                    for unit in reinforcement_units_2:
+                    # print(selected_unit.unit)
+                    for unit in reinforcement_units:
                         if unit.rect.collidepoint(pos):
                             selected_unit = unit
-                            # print(f'selected unit: {selected_unit.unit}')
+                            print(f'selected unit: {selected_unit.unit}')
 
                     if selected_unit:
                         for area in map_areas:
                             if area.rect.collidepoint(pos):
-                                selected_unit = place_turn_2_reinforcement_in_map_area(selected_unit, area, reinforcement_units_2)
+                                selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
+                    print(selected_unit)
 
                 if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
                     place_turn_6_reinforcements(american_units, map_areas[:2])
