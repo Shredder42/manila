@@ -338,6 +338,7 @@ def create_units():
 
     return american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units
 
+# these 3 are redundant - can just make them directly in game.py without the function
 def create_morale():
     return Morale()
 
@@ -349,15 +350,15 @@ def create_supply():
 
 def create_events():
     events = []
-    events.append(Event('Kembu Group Breakthrough', .0046, 'kembu_breakthrough.png'))
-    events.append(Event('Kembu Group Offensive', .0138, 'kembu_offensive.png'))
-    events.append(Event('Pause 1st Cavalry', .0739, '1_cav_paused_front.png'))
-    events.append(Event('Pause 37th Division', .1666, '37_inf_paused_front.png'))
+    events.append(Event('Kembu Group Breakthrough', .0047, 'kembu_breakthrough.png'))
+    events.append(Event('Kembu Group Offensive', .0139, 'kembu_offensive.png'))
+    events.append(Event('Pause 1st Cavalry', .0740, '1_cav_paused_front.png'))
+    events.append(Event('Pause 37th Division', .1667, '37_inf_paused_front.png'))
     events.append(Event('Civilians and Refugees', .4814, 'civ_and_ref.png'))
-    events.append(Event('Pause 11th Airborne', .1666, '11_air_paused_front.png'))
-    events.append(Event('Iwabuchi Breakout', .0739, 'iwabuchi_breakout.png'))
-    events.append(Event('Shimbu Group Offensive', .0138, 'shimbu_offensive.png'))
-    events.append(Event('Shimbu Group Breakthrough', .0046, 'shimbu_breakthrough.png'))
+    events.append(Event('Pause 11th Airborne', .1667, '11_air_paused_front.png'))
+    events.append(Event('Iwabuchi Breakout', .0740, 'iwabuchi_breakout.png'))
+    events.append(Event('Shimbu Group Offensive', .0139, 'shimbu_offensive.png'))
+    events.append(Event('Shimbu Group Breakthrough', .0047, 'shimbu_breakthrough.png'))
 
     event_weights = [event.weight for event in events]
 

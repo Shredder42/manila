@@ -104,4 +104,16 @@ def leader_mortality(turn, out_of_action_units):
                 # returns now following same as those returning from supply (needs to have some helper functions set up)
     return mortality # for message about what happened
 
+# supply
+def get_supply(turn, event):
+    if event in ('Kembu Group Offensive', 'Shimbu Group Offensive'):
+        supply = sum([random.randint(1,6), random.randint(1,6)])
+    else:
+        supply = sum([random.randint(1,6), random.randint(1,6), random.randint(1,6), random.randint(1,6)])
+    if turn == 1:
+        supply = max(supply, 12)
+    return supply
+
+
+
             

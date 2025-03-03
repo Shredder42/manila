@@ -110,7 +110,7 @@ def main():
     running = True
     selected_unit = None
     turn_index = 4 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
+    phase_index = 2 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
     game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
@@ -230,6 +230,7 @@ def main():
                 update_out_of_action_unit_positions(out_of_action_units)
 
 
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -244,8 +245,8 @@ def main():
                     print(mortality)
 
                 # this is a test of out_of_action_units - remove later and update code
-                if map_areas[0].rect.collidepoint(pos):
-                    out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
+                # if map_areas[0].rect.collidepoint(pos):
+                #     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
  
 
                 # reinforcements
@@ -265,7 +266,9 @@ def main():
                 if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
                     place_turn_6_reinforcements(american_units, map_areas[:2])
 
-
+                # supply
+                if PHASES[phase_index] == 'Supply':
+                    supply.add_supply(get_supply(TURNS[turn_index], game_event.type))
 
 
         pygame.display.flip() # flip the display to put changes on screen
