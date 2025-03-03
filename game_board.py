@@ -38,7 +38,7 @@ class MapArea:
             self.american_units.append(unit)
             self.stack_count += 1
             self.__update_american_unit_positions()
-            print('ran add unit to area')
+            # print('ran add unit to area')
 
     def remove_unit_from_area(self, unit):
         self.american_units.remove(unit)

@@ -1,5 +1,6 @@
 import pygame
 from constants import *
+import random
 
 
 # Reinforcements
@@ -34,7 +35,7 @@ def place_reinforcement(selected_unit, area, reinforcement_units):
         else:
             message = 'Area not American controlled'  
     else:
-        message = 'Not allowed to deploy to that area'
+        message = 'Not allowed to deploy to this area'
 
     return selected_unit, message
 
@@ -85,6 +86,22 @@ def withdrawal(turn, unit, map_areas, out_of_action_units, morale, permanent=Fal
 
         if not permanent:
             unit.reinforcemnt_turn = turn + 1
-            unit.setup = [1, 2]                
+            unit.setup = [1, 2]
+
+# leader mortality
+def leader_mortality(turn, out_of_action_units):
+    for unit in out_of_action_units:
+        if unit.unit_type == 'leader':
+            mortality = random.choice(['kia', 'lightly wounded', 'healthy'])
+            if mortality == 'kia':
+                out_of_action_units.remove(unit)
+            elif mortality == 'lightly wounded':
+                out_of_action_units.remove(unit)
+                unit.reinforcement_turn = turn + 1
+                # returns now following same as those returning from supply (needs to have some helper functions set up)
+            else:
+                pass
+                # returns now following same as those returning from supply (needs to have some helper functions set up)
+    return mortality # for message about what happened
 
             

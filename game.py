@@ -109,7 +109,7 @@ def determine_game_event(game_events, game_event_weights):
 def main():
     running = True
     selected_unit = None
-    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 4 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     out_of_action_units = []
@@ -239,9 +239,13 @@ def main():
 
                 # turn_index = 5
 
+                if TURNS[turn_index][0] == 5 and PHASES[phase_index] == 'Dawn' and out_of_action_units:
+                    mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
+                    print(mortality)
+
                 # this is a test of out_of_action_units - remove later and update code
-                # if map_areas[0].rect.collidepoint(pos):
-                #     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
+                if map_areas[0].rect.collidepoint(pos):
+                    out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
  
 
                 # reinforcements
@@ -260,6 +264,7 @@ def main():
 
                 if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
                     place_turn_6_reinforcements(american_units, map_areas[:2])
+
 
 
 
