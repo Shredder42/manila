@@ -4,12 +4,14 @@ import random
 
 
 # Reinforcements
-def identify_reinforcement_units(turn, american_units):
+def identify_reinforcement_units(turn, american_units, reinforcement_units):
     '''
     identify reinforcements for the current turn and update their coordinates to draw in the appropriate spot
     return a list of just those units
     '''
-    reinforcement_units = [unit for unit in american_units if unit.reinforcement_turn == turn]
+    for unit in american_units:
+        if unit.reinforcement_turn == turn:
+            reinforcement_units.append(unit)
 
     for index, unit in enumerate(reinforcement_units):
         unit.rect.x = 1020 + ((index % 6) * 60)
@@ -23,6 +25,7 @@ def place_reinforcement(selected_unit, area, reinforcement_units):
 #     check if conditions are met for selected unit in selected area
 #     return the selected unit (None if the move was made), and message if move wasn't made
 #     '''
+    print(reinforcement_units)
     message = None
     if area.identifier in selected_unit.setup:
         if area.control == 'American':
@@ -113,6 +116,24 @@ def get_supply(turn, event):
     if turn == 1:
         supply = max(supply, 12)
     return supply
+
+def update_return_areas(selected_unit, map_areas):
+    possible_areas = []
+    if selected_unit.organization == '37th Inf':
+        possible_areas.append(1)
+    elif selected_unit.organization == '1st Cav':
+        possible_areas.append(2)
+    elif selected_unit.organization == '11th Air':
+        possible_areas.append(30)
+
+    for area in map_areas:
+        if area.american_units:
+            for unit in area.american_units:
+                if unit.organization == selected_unit.organization:
+                    possible_areas.append(area.identifier)
+
+    selected_unit.setup = possible_areas
+
 
 
 

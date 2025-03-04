@@ -109,11 +109,14 @@ def determine_game_event(game_events, game_event_weights):
 def main():
     running = True
     selected_unit = None
-    turn_index = 4 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 2 # this will increment at end of every phase and turn over at the end - update manually for now
+    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
+    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
+    reinforcement_units = []
     out_of_action_units = []
     game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
+    supply_added = False # this will likely need to get moved (how to only allow supply to be added once per supply round (more granular phases???))
+    morale_message_4 = None
     # reinforcement_units = update_turn_2_reinforcement_coordinates(american_units)
     
     while running:
@@ -136,6 +139,8 @@ def main():
         text_on_screen(90, 890, str(support_units[1].count), 'black', 30)
         text_on_screen(90, 950, str(supply.count), 'black', 30)
         for unit in out_of_action_units:
+            unit.draw(screen)
+        for unit in reinforcement_units:
             unit.draw(screen)
         
         # screen.blit(surface, (0,0)) # remove this if determine don't need
@@ -188,6 +193,7 @@ def main():
             morale_message_1 = '+1 to Attack Value if Strong'
             morale_message_2 = '+1 to Defense Value if Shaken'
             morale_message_3 = 'Americans lose if Morale drops to 0 after any Combat Phase'
+            
             text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, 'Morale', 'white', HEADER_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, morale_message_1, 'white', LINE_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, morale_message_2, 'white', LINE_SIZE)
@@ -195,6 +201,12 @@ def main():
                 text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, morale_message_3, 'white', LINE_SIZE)
             else:
                 text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, morale_message_3, 'red', LINE_SIZE)
+            if morale_message_4:
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_4_Y, morale_message_4, 'red', LINE_SIZE)
+
+        # removes message after moving cursor off morale rect
+        if not morale.rect.collidepoint(pos):
+            morale_message_4 = None
 
         if supply.rect.collidepoint(pos):
             text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, 'Total Supply available', 'white', HEADER_SIZE)
@@ -207,15 +219,15 @@ def main():
 
 
         # reinforcement part of Dawn
-        reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units)
+        # reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units)
         # print(reinforcement_units)
 
         # turn 2 reinforcements
         if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
             text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Available', 'white', HEADER_SIZE)
             text_on_screen(LEFT_EDGE_X, 580, 'Select Units to add to American controlled Areas 27, 28, or 30', 'white', LINE_SIZE)
-            for unit in reinforcement_units:
-                unit.draw(screen)
+            # for unit in reinforcement_units:
+            #     unit.draw(screen)
 
         # turn 6 reinforcements
         if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
@@ -229,7 +241,11 @@ def main():
                 withdrawal(6, unit, map_areas, out_of_action_units, morale, True)          
                 update_out_of_action_unit_positions(out_of_action_units)
 
-
+        # for unit in map_areas[1].american_units:
+        #     print(unit.unit)
+        # # print(map_areas[1].identifier)
+        # if american_units[0] in map_areas[1].american_units:
+        #     remove_from_action(american_units[0], map_areas[1], out_of_action_units)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -242,12 +258,15 @@ def main():
 
                 if TURNS[turn_index][0] == 5 and PHASES[phase_index] == 'Dawn' and out_of_action_units:
                     mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
-                    print(mortality)
+                    # print(mortality)
 
                 # this is a test of out_of_action_units - remove later and update code
                 # if map_areas[0].rect.collidepoint(pos):
                 #     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
- 
+                if american_units[0] in map_areas[1].american_units and map_areas[2].rect.collidepoint(pos):
+                    # remove_from_action(american_units[0], map_areas[1], out_of_action_units)
+                    # remove_from_action(american_units[20], map_areas[1], out_of_action_units)
+                    reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
 
                 # reinforcements
                 if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
@@ -268,8 +287,59 @@ def main():
 
                 # supply
                 if PHASES[phase_index] == 'Supply':
-                    supply.add_supply(get_supply(TURNS[turn_index], game_event.type))
+                    if not supply_added:
+                        supply.add_supply(get_supply(TURNS[turn_index], game_event.type))
+                        supply_added = True
 
+                    # may want to put these into one or two functions
+                    # artillery support
+                    if support_units[0].rect.collidepoint(pos):
+                        message = supply.spend_supply(support_units[0].type)
+                        if not message:
+                            support_units[0].count +=1
+                    # engineer support
+                    if support_units[1].rect.collidepoint(pos):
+                        message = supply.spend_supply(support_units[1].type)
+                        if not message:
+                            support_units[1].count +=1
+                    # increase morale
+                    if morale.rect.collidepoint(pos):
+                        if morale.count < 19:
+                            message = supply.spend_supply('increase morale')
+                            if not message:
+                                morale.count +=1
+                        else:
+                            morale_message_4 = 'Morale already at max'
+                    # return unit to map - MAYBE WANT TO CLEAN THIS UP
+                    for unit in out_of_action_units:
+                        if unit.rect.collidepoint(pos):
+                            if unit.unit_type in ('infantry', 'armor'):
+                                message = supply.spend_supply(unit.unit_type)
+                                if not message:
+                                    update_return_areas(unit, map_areas)
+                                    unit.reinforcement_turn = TURNS[turn_index]
+                                    reinforcement_units = identify_reinforcement_units(TURNS[turn_index], [unit], reinforcement_units)
+                                    out_of_action_units.remove(unit)
+                                
+                    # finish placing the reinforcement
+                    # print(selected_unit.unit)
+                    print(f'first rein units {reinforcement_units}')
+                    if reinforcement_units and not selected_unit:
+                        for unit in reinforcement_units:
+                            if unit.rect.collidepoint(pos):
+                                selected_unit = unit
+                                # print(f'selected unit: {selected_unit.unit}')
+                                # print(f'second rein units {reinforcement_units}')
+
+                    if selected_unit:
+                        for area in map_areas:
+                            if area.rect.collidepoint(pos):
+                                # print(f'third rein unit {reinforcement_units}')
+                                selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
+                    # print(f'selected unit {selected_unit}')                                              
+
+
+                    
 
         pygame.display.flip() # flip the display to put changes on screen
 

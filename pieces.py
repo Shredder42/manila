@@ -142,6 +142,11 @@ class Morale:
         '''
         self.count += amount
 
+        if self.count > 19:
+            self.count = 19
+        if self.count < 0:
+            self.count = 0
+
         if self.count <= 9:
             self.shaken = True
         else:
@@ -194,9 +199,8 @@ class Supply:
         '''
         if self.count >= SUPPLY_COSTS[item_purchased]:
             self.count -= SUPPLY_COSTS[item_purchased]
-        # figure out message and how this will work
-        # else:
-        #     text_on_screen()
+        else:
+            return 'Not enough supply'
 
 class Event():
     def __init__(self, type, weight, filename):

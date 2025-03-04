@@ -26,8 +26,8 @@ PHASES = ['Dawn', 'Event', 'Supply', 'Combat', 'End']
 SUPPLY_COSTS = {
     'artillery support': 1,
     'engineer support': 2,
-    'recover infantry': 2,
-    'recover armor': 3,
+    'infantry': 2,
+    'armor': 3,
     'increase morale': 3
 }
 
