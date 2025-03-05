@@ -29,7 +29,7 @@ american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban,
 legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
 supply = create_supply()
-game_events, game_event_weights = create_events()
+potential_events, potential_event_weights = create_events()
 test_unit1 = random.choice(american_units)
 test_unit2 = random.choice(japanese_units_clear)
 
@@ -101,8 +101,7 @@ def update_out_of_action_unit_positions(out_of_action_units):
         else:
             unit.rect.y = OUT_OF_ACTION_Y4
 
-def determine_game_event(game_events, game_event_weights):
-    return random.choices(game_events, weights=game_event_weights)[0]
+
 
 
 
@@ -110,12 +109,12 @@ def determine_game_event(game_events, game_event_weights):
 def main():
     running = True
     selected_unit = None
-    turn_index = 4 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 3 # this will increment at end of every turn (one below actual turn number)
     phase_index = 4 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
     out_of_action_units = []
-    game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
+    game_events = []
     supply_added = False # this will likely need to get moved (how to only allow supply to be added once per supply round (more granular phases???))
     morale_message_4 = None
 
@@ -134,7 +133,6 @@ def main():
             support_unit.draw(screen)
         morale.draw(screen)
         supply.draw(screen)
-        game_event.draw(screen)
         text_on_screen(90, 710, str(areas_controlled), 'black', 30)
         text_on_screen(90, 770, str(morale.count), 'black', 30)
         text_on_screen(90, 830, str(support_units[0].count), 'black', 30)
@@ -144,8 +142,9 @@ def main():
             unit.draw(screen)
         for unit in reinforcement_units:
             unit.draw(screen)
+        if game_events and PHASES[phase_index] != 'Dawn':
+            game_events[-1].draw(screen)
         
-        # screen.blit(surface, (0,0)) # remove this if determine don't need
         pos = pygame.mouse.get_pos()
 
 
@@ -154,6 +153,8 @@ def main():
         # testing - remove
         # test_unit1.draw(screen)
         # test_unit2.draw(screen)
+
+
         for area in map_areas:
             if area.rect.collidepoint(pos):
                 # make everything below it's own function probably
@@ -347,8 +348,10 @@ def main():
                 # advancing the game
                 if advance_button.rect.collidepoint(pos):
                     phase_index, turn_index = advance_game(phase_index, turn_index)
-                    # DAWN phase
+
+                    # DAWN PHASE
                     if PHASES[phase_index] == 'Dawn':
+                        game_event = None
                         # leader_mortality
                         mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
                         update_out_of_action_unit_positions(out_of_action_units)
@@ -363,10 +366,13 @@ def main():
                                 withdraw(6, unit, map_areas, out_of_action_units, morale, True)          
                                 update_out_of_action_unit_positions(out_of_action_units)
 
-                    
-                    # SUPPLY phase
+                    # EVENT PHASE
+                    if PHASES[phase_index] == 'Event':
+                        game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events))
+
+                    # SUPPLY PHASE
                     if PHASES[phase_index] == 'Supply':
-                        supply.add_supply(get_supply(TURNS[turn_index], game_event.type))
+                        supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
 
 
 

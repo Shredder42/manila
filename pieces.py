@@ -23,6 +23,7 @@ class AmericanUnit:
         self.rect.x = 0
         self.rect.y = 0
         self.out_of_action = False
+        self.withdrawn = False
         self.moving = False
         self.selected = False
 
@@ -363,6 +364,7 @@ def create_events():
     events.append(Event('Iwabuchi Breakout', .0740, 'iwabuchi_breakout.png'))
     events.append(Event('Shimbu Group Offensive', .0139, 'shimbu_offensive.png'))
     events.append(Event('Shimbu Group Breakthrough', .0047, 'shimbu_breakthrough.png'))
+    events.append(Event('No Event', .0000, 'no_event.png'))
 
     event_weights = [event.weight for event in events]
 

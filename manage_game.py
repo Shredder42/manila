@@ -113,7 +113,7 @@ def withdraw(turn, unit, map_areas, out_of_action_units, morale, permanent=False
 
         if not permanent:
             unit.reinforcemnt_turn = turn + 1
-            unit.setup = [1, 2]
+            unit.withdrawn = True
 
 # leader mortality
 def leader_mortality(turn, out_of_action_units):
@@ -147,21 +147,46 @@ def get_supply(turn, event):
 
 def update_return_areas(selected_unit, map_areas):
     possible_areas = []
-    if selected_unit.organization == '37th Inf':
-        possible_areas.append(1)
-    elif selected_unit.organization == '1st Cav':
-        possible_areas.append(2)
-    elif selected_unit.organization == '11th Air':
-        possible_areas.append(30)
 
-    for area in map_areas:
-        if area.american_units:
-            for unit in area.american_units:
-                if unit.organization == selected_unit.organization:
-                    possible_areas.append(area.identifier)
+    if selected_unit.withdrawn:
+        possible_areas.append(1)
+        possible_areas.append(2)
+        selected_unit.withdrawn = False
+
+    else:
+        if selected_unit.organization == '37th Inf':
+            possible_areas.append(1)
+        elif selected_unit.organization == '1st Cav':
+            possible_areas.append(2)
+        elif selected_unit.organization == '11th Air':
+            possible_areas.append(30)
+
+        for area in map_areas:
+            if area.american_units:
+                for unit in area.american_units:
+                    if unit.organization == selected_unit.organization:
+                        possible_areas.append(area.identifier)
 
     selected_unit.setup = possible_areas
 
+# event
+def determine_game_event(potential_events, potential_event_weights, turn, game_events):
+    new_event = random.choices(potential_events, weights=potential_event_weights)[0]
+    # print(new_event.type)
+    if turn >= 6 and turn <= 9:
+        if new_event == potential_events[0]:
+            new_event = potential_events[1]
+        elif new_event == potential_events[8]:
+            new_event = potential_events[7]
+    if new_event in (potential_events[2], potential_events[3], potential_events[5]):
+        if turn == 1 or turn == 9:
+            new_event = potential_events[9]
+        if game_events:
+            if new_event == game_events[-1]:
+                new_event = potential_events[9]
+
+    return new_event
+    
 
 
 
