@@ -368,7 +368,7 @@ def main():
 
                     # EVENT PHASE
                     if PHASES[phase_index] == 'Event':
-                        game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events))
+                        game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events, map_areas))
 
                     # SUPPLY PHASE
                     if PHASES[phase_index] == 'Supply':

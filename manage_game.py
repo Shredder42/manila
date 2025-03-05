@@ -170,20 +170,35 @@ def update_return_areas(selected_unit, map_areas):
     selected_unit.setup = possible_areas
 
 # event
-def determine_game_event(potential_events, potential_event_weights, turn, game_events):
+def determine_game_event(potential_events, potential_event_weights, turn, game_events, map_areas):
+    '''
+    determine the event for the game turn
+    '''
     new_event = random.choices(potential_events, weights=potential_event_weights)[0]
-    # print(new_event.type)
+    print(new_event.type)
     if turn >= 6 and turn <= 9:
         if new_event == potential_events[0]:
             new_event = potential_events[1]
         elif new_event == potential_events[8]:
             new_event = potential_events[7]
+
     if new_event in (potential_events[2], potential_events[3], potential_events[5]):
         if turn == 1 or turn == 9:
             new_event = potential_events[9]
         if game_events:
             if new_event == game_events[-1]:
                 new_event = potential_events[9]
+
+    if new_event == potential_events[6]:
+        for area in map_areas:
+            if area.control == 'American' and area.terrain in ('urban', 'fort'):
+                breakout = random.choices(['breakout', 'no breakout'], [0.33, 0.67])[0]
+                if breakout == 'no breakout':
+                    new_event = potential_events[9]
+                break
+        else:
+            new_event = potential_events[9]
+
 
     return new_event
     
