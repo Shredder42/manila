@@ -51,7 +51,7 @@ def place_reinforcement(selected_unit, area, reinforcement_units):
     return the selected unit (None if the move was made), and message if move wasn't made
     '''
     message = None
-    if area.identifier in selected_unit.setup: # issue with this line for turn 6 (or 1 place only reinforcements)
+    if area.identifier in selected_unit.setup:
         if area.control == 'American':
             message = area.add_unit_to_area(selected_unit)
             if not message:
@@ -117,19 +117,22 @@ def withdraw(turn, unit, map_areas, out_of_action_units, morale, permanent=False
 
 # leader mortality
 def leader_mortality(turn, out_of_action_units):
+    '''
+    runs mortality check on leader and updates unit attributes accordingly
+    also removes from out of action units
+    '''
     mortality = None
+
     for unit in out_of_action_units[:]:
         if unit.unit_type == 'leader':
             mortality = random.choice(['kia', 'lightly wounded', 'healthy'])
-            if mortality == 'kia':
-                out_of_action_units.remove(unit)
-            elif mortality == 'lightly wounded':
-                out_of_action_units.remove(unit)
+            if mortality == 'lightly wounded':
                 unit.reinforcement_turn = turn + 1
-                # returns now following same as those returning from supply (needs to have some helper functions set up)
-            else:
-                pass
-                # returns now following same as those returning from supply (needs to have some helper functions set up)
+            elif mortality == 'healthy':
+                unit.reinforcement_turn = turn
+
+            out_of_action_units.remove(unit)
+
     return mortality # for message about what happened
 
 # supply

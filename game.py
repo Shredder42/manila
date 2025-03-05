@@ -218,8 +218,8 @@ def main():
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, 'Supply Costs:', 'white', LINE_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'- Artillery Support: {SUPPLY_COSTS["artillery support"]}', 'white', LINE_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, f'- Engineer Support: {SUPPLY_COSTS["engineer support"]}', 'white', LINE_SIZE)
-            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_4_Y, f'- Recover Infantry Unit: {SUPPLY_COSTS["recover infantry"]}', 'white', LINE_SIZE)
-            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_5_Y, f'- Recover Armor Unit: {SUPPLY_COSTS["recover armor"]}', 'white', LINE_SIZE)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_4_Y, f'- Recover Infantry Unit: {SUPPLY_COSTS["infantry"]}', 'white', LINE_SIZE)
+            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_5_Y, f'- Recover Armor Unit: {SUPPLY_COSTS["armor"]}', 'white', LINE_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_6_Y, f'- Increase Morale: {SUPPLY_COSTS["increase morale"]}', 'white', LINE_SIZE)
 
 
@@ -274,19 +274,20 @@ def main():
                     remove_from_action(american_units[29], map_areas[1], out_of_action_units)
                     # reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
 
-                # reinforcements UPDATE HOW REINFORCEMENT UNITS GET ADDED (REMOVE THE TURN QUALIFIERS - SHOULD WORK FOR BOTH )
-                # if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
+                # reinforcements UPDATE HOW REINFORCEMENT UNITS GET ADDED (TURN QUALIFIER - SHOULD ONLY WORK IN CORRECT PHASE FOR BOTH )
+                if PHASES[phase_index] in ('Dawn', 'Supply'):
                     # print(selected_unit.unit)
-                for unit in reinforcement_units:
-                    if unit.rect.collidepoint(pos):
-                        selected_unit = unit
-                        print(f'selected unit: {selected_unit.unit}')
+                    for unit in reinforcement_units:
+                        update_return_areas(unit, map_areas)
+                        if unit.rect.collidepoint(pos):
+                            selected_unit = unit
+                            # print(f'selected unit: {selected_unit.unit}')
 
-                if selected_unit:
-                    for area in map_areas:
-                        if area.rect.collidepoint(pos):
-                            selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
-                print(selected_unit)
+                    if selected_unit:
+                        for area in map_areas:
+                            if area.rect.collidepoint(pos):
+                                selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
+                # print(selected_unit)
 
                 # if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
                 #     place_turn_6_reinforcements(american_units, map_areas[:2])
@@ -321,7 +322,6 @@ def main():
                             if unit.unit_type in ('infantry', 'armor'):
                                 message = supply.spend_supply(unit.unit_type)
                                 if not message:
-                                    update_return_areas(unit, map_areas)
                                     unit.reinforcement_turn = TURNS[turn_index]
                                     reinforcement_units = identify_reinforcement_units(TURNS[turn_index], [unit], reinforcement_units)
                                     out_of_action_units.remove(unit)
@@ -349,6 +349,10 @@ def main():
                     phase_index, turn_index = advance_game(phase_index, turn_index)
                     # DAWN phase
                     if PHASES[phase_index] == 'Dawn':
+                        # leader_mortality
+                        mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
+                        update_out_of_action_unit_positions(out_of_action_units)
+                        print(mortality)
                         # reinforcement check
                         reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
                         # mandatory withdrawal
@@ -358,10 +362,7 @@ def main():
                             for unit in units_to_withdraw:
                                 withdraw(6, unit, map_areas, out_of_action_units, morale, True)          
                                 update_out_of_action_unit_positions(out_of_action_units)
-                        # leader_mortality
-                        mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
-                        update_out_of_action_unit_positions(out_of_action_units)
-                        print(mortality)
+
                     
                     # SUPPLY phase
                     if PHASES[phase_index] == 'Supply':
