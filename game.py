@@ -85,21 +85,21 @@ def remove_from_action(unit, area, out_of_action_units):
 
     return out_of_action_units
 
-def update_out_of_action_unit_positions(out_of_action_units):
-    '''
-    updates the rect values in the American units when they are added or removed from 
-    out of action
-    '''
-    for index, unit in enumerate(out_of_action_units):
-        unit.rect.x = LEFT_EDGE_X + ((index % 6) * 60)
-        if index <= 5:
-            unit.rect.y = OUT_OF_ACTION_Y1 
-        elif index >=6 and index <= 11:
-            unit.rect.y = OUT_OF_ACTION_Y2
-        elif index >= 11 and index <= 17:
-            unit.rect.y = OUT_OF_ACTION_Y3
-        else:
-            unit.rect.y = OUT_OF_ACTION_Y4
+# def update_out_of_action_unit_positions(out_of_action_units):
+#     '''
+#     updates the rect values in the American units when they are added or removed from 
+#     out of action
+#     '''
+#     for index, unit in enumerate(out_of_action_units):
+#         unit.rect.x = LEFT_EDGE_X + ((index % 6) * 60)
+#         if index <= 5:
+#             unit.rect.y = OUT_OF_ACTION_Y1 
+#         elif index >=6 and index <= 11:
+#             unit.rect.y = OUT_OF_ACTION_Y2
+#         elif index >= 11 and index <= 17:
+#             unit.rect.y = OUT_OF_ACTION_Y3
+#         else:
+#             unit.rect.y = OUT_OF_ACTION_Y4
 
 
 
@@ -109,7 +109,7 @@ def update_out_of_action_unit_positions(out_of_action_units):
 def main():
     running = True
     selected_unit = None
-    turn_index = 3 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 2 # this will increment at end of every turn (one below actual turn number)
     phase_index = 4 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
@@ -271,7 +271,8 @@ def main():
                 #     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
                 if american_units[0] in map_areas[1].american_units and map_areas[2].rect.collidepoint(pos):
                     remove_from_action(american_units[0], map_areas[1], out_of_action_units)
-                    remove_from_action(american_units[23], map_areas[1], out_of_action_units)
+                    remove_from_action(american_units[21], map_areas[1], out_of_action_units)
+                    remove_from_action(american_units[22], map_areas[1], out_of_action_units)
                     remove_from_action(american_units[29], map_areas[1], out_of_action_units)
                     # reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
 
@@ -326,6 +327,7 @@ def main():
                                     unit.reinforcement_turn = TURNS[turn_index]
                                     reinforcement_units = identify_reinforcement_units(TURNS[turn_index], [unit], reinforcement_units)
                                     out_of_action_units.remove(unit)
+                                    update_out_of_action_unit_positions(out_of_action_units)
                                 
                     # finish placing the reinforcement
                     # print(selected_unit.unit)
@@ -352,23 +354,25 @@ def main():
                     # DAWN PHASE
                     if PHASES[phase_index] == 'Dawn':
                         game_event = None
+                        # mandatory withdrawal
+                        if TURNS[turn_index][0] == 6:
+                            withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=True)
                         # leader_mortality
                         mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
                         update_out_of_action_unit_positions(out_of_action_units)
                         print(mortality)
                         # reinforcement check
                         reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
-                        # mandatory withdrawal
-                        if TURNS[turn_index][0] == 6:
-                            units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
-                            print(units_to_withdraw)
-                            for unit in units_to_withdraw:
-                                withdraw(6, unit, map_areas, out_of_action_units, morale, True)          
-                                update_out_of_action_unit_positions(out_of_action_units)
+
 
                     # EVENT PHASE
                     if PHASES[phase_index] == 'Event':
                         game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events, map_areas))
+
+                        if game_events[-1].type == 'Kembu Group Breakthrough':
+                            withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
+                        elif game_events[-1].type == 'Shimbu Group Breakthrough':
+                            withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
 
                     # SUPPLY PHASE
                     if PHASES[phase_index] == 'Supply':

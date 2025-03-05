@@ -366,6 +366,18 @@ def create_events():
     events.append(Event('Shimbu Group Breakthrough', .0047, 'shimbu_breakthrough.png'))
     events.append(Event('No Event', .0000, 'no_event.png'))
 
+
+    # events.append(Event('Kembu Group Breakthrough', 1, 'kembu_breakthrough.png'))
+    # events.append(Event('Kembu Group Offensive', 0, 'kembu_offensive.png'))
+    # events.append(Event('Pause 1st Cavalry', .00, '1_cav_paused_front.png'))
+    # events.append(Event('Pause 37th Division', .0, '37_inf_paused_front.png'))
+    # events.append(Event('Civilians and Refugees', .0, 'civ_and_ref.png'))
+    # events.append(Event('Pause 11th Airborne', .0, '11_air_paused_front.png'))
+    # events.append(Event('Iwabuchi Breakout', .00, 'iwabuchi_breakout.png'))
+    # events.append(Event('Shimbu Group Offensive', .0, 'shimbu_offensive.png'))
+    # events.append(Event('Shimbu Group Breakthrough', .00, 'shimbu_breakthrough.png'))
+    # events.append(Event('No Event', .0000, 'no_event.png'))
+
     event_weights = [event.weight for event in events]
 
     return events, event_weights

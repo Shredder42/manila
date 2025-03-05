@@ -103,17 +103,26 @@ def place_turn_6_reinforcements(american_units, map_areas):
 
 # withdrawal
 def withdraw(turn, unit, map_areas, out_of_action_units, morale, permanent=False):
+    if permanent and unit.withdrawn:
+        unit.reinforcement_turn = None
+
+    else:
         for area in map_areas:
             if unit in area.american_units[:]:
                 area.remove_unit_from_area(unit)
+                unit.withdrawn = True
+                if not permanent:
+                    unit.reinforcement_turn = turn + 1
+                break
+        
         if unit in out_of_action_units[:]:
             morale.adjust_morale(-1)
             if permanent:
+                unit.withdrawn = True
                 out_of_action_units.remove(unit)
 
-        if not permanent:
-            unit.reinforcemnt_turn = turn + 1
-            unit.withdrawn = True
+    print(permanent)
+    print(f'{unit.unit} rein turn is {unit.reinforcement_turn}')
 
 # leader mortality
 def leader_mortality(turn, out_of_action_units):
@@ -199,11 +208,31 @@ def determine_game_event(potential_events, potential_event_weights, turn, game_e
         else:
             new_event = potential_events[9]
 
-
     return new_event
     
 
+def withdraw_44th_battallion(turn, american_units, map_areas, out_of_action_units, morale, premanent=False):
+    units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
+
+    for unit in units_to_withdraw:
+        withdraw(turn, unit, map_areas, out_of_action_units, morale, premanent)          
+        update_out_of_action_unit_positions(out_of_action_units)
 
 
+def update_out_of_action_unit_positions(out_of_action_units):
+    '''
+    updates the rect values in the American units when they are added or removed from 
+    out of action
+    '''
+    for index, unit in enumerate(out_of_action_units):
+        unit.rect.x = LEFT_EDGE_X + ((index % 6) * 60)
+        if index <= 5:
+            unit.rect.y = OUT_OF_ACTION_Y1 
+        elif index >=6 and index <= 11:
+            unit.rect.y = OUT_OF_ACTION_Y2
+        elif index >= 11 and index <= 17:
+            unit.rect.y = OUT_OF_ACTION_Y3
+        else:
+            unit.rect.y = OUT_OF_ACTION_Y4
     
         
