@@ -24,6 +24,7 @@ game_board = pygame.transform.smoothscale_by(game_board, 0.8)
 clock = pygame.time.Clock()
 
 # all testing areas - may get removed later
+advance_button = Button(1450, 10, 'arrow.png')
 american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units()
 legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
@@ -109,15 +110,15 @@ def determine_game_event(game_events, game_event_weights):
 def main():
     running = True
     selected_unit = None
-    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
+    turn_index = 4 # this will increment at end of every turn (one below actual turn number)
+    phase_index = 4 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
     out_of_action_units = []
     game_event = determine_game_event(game_events, game_event_weights) # this will need to be moved
     supply_added = False # this will likely need to get moved (how to only allow supply to be added once per supply round (more granular phases???))
     morale_message_4 = None
-    # reinforcement_units = update_turn_2_reinforcement_coordinates(american_units)
+
     
     while running:
         screen.fill(ESPRESSO)
@@ -127,6 +128,7 @@ def main():
         text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', 30)
         text_on_screen(LEFT_EDGE_X, 90, f'Event:', 'white', 30) # placeholding for now -> Update
         text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', 30)
+        advance_button.draw(screen)
         legend_control_marker.draw(screen)
         for support_unit in support_units:
             support_unit.draw(screen)
@@ -146,6 +148,9 @@ def main():
         # screen.blit(surface, (0,0)) # remove this if determine don't need
         pos = pygame.mouse.get_pos()
 
+
+        if advance_button.rect.collidepoint(pos):
+            text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
         # testing - remove
         # test_unit1.draw(screen)
         # test_unit2.draw(screen)
@@ -236,10 +241,10 @@ def main():
 
         
             # mandatory withdrawal
-            units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
-            for unit in units_to_withdraw:
-                withdrawal(6, unit, map_areas, out_of_action_units, morale, True)          
-                update_out_of_action_unit_positions(out_of_action_units)
+            # units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
+            # for unit in units_to_withdraw:
+            #     withdrawal(6, unit, map_areas, out_of_action_units, morale, True)          
+            #     update_out_of_action_unit_positions(out_of_action_units)
 
         # for unit in map_areas[1].american_units:
         #     print(unit.unit)
@@ -256,40 +261,40 @@ def main():
 
                 # turn_index = 5
 
-                if TURNS[turn_index][0] == 5 and PHASES[phase_index] == 'Dawn' and out_of_action_units:
-                    mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
+                # if TURNS[turn_index][0] == 5 and PHASES[phase_index] == 'Dawn' and out_of_action_units:
+                    # mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
                     # print(mortality)
 
                 # this is a test of out_of_action_units - remove later and update code
                 # if map_areas[0].rect.collidepoint(pos):
                 #     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
                 if american_units[0] in map_areas[1].american_units and map_areas[2].rect.collidepoint(pos):
-                    # remove_from_action(american_units[0], map_areas[1], out_of_action_units)
-                    # remove_from_action(american_units[20], map_areas[1], out_of_action_units)
-                    reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
+                    remove_from_action(american_units[0], map_areas[1], out_of_action_units)
+                    remove_from_action(american_units[23], map_areas[1], out_of_action_units)
+                    remove_from_action(american_units[29], map_areas[1], out_of_action_units)
+                    # reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
 
-                # reinforcements
-                if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
+                # reinforcements UPDATE HOW REINFORCEMENT UNITS GET ADDED (REMOVE THE TURN QUALIFIERS - SHOULD WORK FOR BOTH )
+                # if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
                     # print(selected_unit.unit)
-                    for unit in reinforcement_units:
-                        if unit.rect.collidepoint(pos):
-                            selected_unit = unit
-                            print(f'selected unit: {selected_unit.unit}')
+                for unit in reinforcement_units:
+                    if unit.rect.collidepoint(pos):
+                        selected_unit = unit
+                        print(f'selected unit: {selected_unit.unit}')
 
-                    if selected_unit:
-                        for area in map_areas:
-                            if area.rect.collidepoint(pos):
-                                selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
-                    print(selected_unit)
+                if selected_unit:
+                    for area in map_areas:
+                        if area.rect.collidepoint(pos):
+                            selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
+                print(selected_unit)
 
-                if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
-                    place_turn_6_reinforcements(american_units, map_areas[:2])
+                # if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
+                #     place_turn_6_reinforcements(american_units, map_areas[:2])
+                #     for unit in reinforcement_units:
+                #         print(unit.unit)
 
                 # supply
                 if PHASES[phase_index] == 'Supply':
-                    if not supply_added:
-                        supply.add_supply(get_supply(TURNS[turn_index], game_event.type))
-                        supply_added = True
 
                     # may want to put these into one or two functions
                     # artillery support
@@ -339,7 +344,31 @@ def main():
                     # print(f'selected unit {selected_unit}')                                              
 
 
+                # advancing the game
+                if advance_button.rect.collidepoint(pos):
+                    phase_index, turn_index = advance_game(phase_index, turn_index)
+                    # DAWN phase
+                    if PHASES[phase_index] == 'Dawn':
+                        # reinforcement check
+                        reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
+                        # mandatory withdrawal
+                        if TURNS[turn_index][0] == 6:
+                            units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
+                            print(units_to_withdraw)
+                            for unit in units_to_withdraw:
+                                withdraw(6, unit, map_areas, out_of_action_units, morale, True)          
+                                update_out_of_action_unit_positions(out_of_action_units)
+                        # leader_mortality
+                        mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
+                        update_out_of_action_unit_positions(out_of_action_units)
+                        print(mortality)
                     
+                    # SUPPLY phase
+                    if PHASES[phase_index] == 'Supply':
+                        supply.add_supply(get_supply(TURNS[turn_index], game_event.type))
+
+
+
 
         pygame.display.flip() # flip the display to put changes on screen
 

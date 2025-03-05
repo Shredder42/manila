@@ -2,6 +2,31 @@ import pygame
 from constants import *
 import random
 
+# game control
+class Button:
+    def __init__(self, x, y, filename):
+        self.filename = filename
+        self.image = self.__load_image()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def __load_image(self):
+        image = pygame.image.load(f'./images/{self.filename}')
+        image = pygame.transform.smoothscale(image, (70,70))
+        return image
+    
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+def advance_game(phase_index, turn_index):
+    if phase_index == 4:
+        phase_index = 0
+        turn_index += 1
+    else:
+        phase_index += 1
+
+    return phase_index, turn_index
 
 # Reinforcements
 def identify_reinforcement_units(turn, american_units, reinforcement_units):
@@ -21,13 +46,12 @@ def identify_reinforcement_units(turn, american_units, reinforcement_units):
     return reinforcement_units
 
 def place_reinforcement(selected_unit, area, reinforcement_units):
-#     '''
-#     check if conditions are met for selected unit in selected area
-#     return the selected unit (None if the move was made), and message if move wasn't made
-#     '''
-    print(reinforcement_units)
+    '''
+    check if conditions are met for selected unit in selected area
+    return the selected unit (None if the move was made), and message if move wasn't made
+    '''
     message = None
-    if area.identifier in selected_unit.setup:
+    if area.identifier in selected_unit.setup: # issue with this line for turn 6 (or 1 place only reinforcements)
         if area.control == 'American':
             message = area.add_unit_to_area(selected_unit)
             if not message:
@@ -78,7 +102,7 @@ def place_turn_6_reinforcements(american_units, map_areas):
                 area.add_unit_to_area(unit)
 
 # withdrawal
-def withdrawal(turn, unit, map_areas, out_of_action_units, morale, permanent=False):
+def withdraw(turn, unit, map_areas, out_of_action_units, morale, permanent=False):
         for area in map_areas:
             if unit in area.american_units[:]:
                 area.remove_unit_from_area(unit)
@@ -93,7 +117,8 @@ def withdrawal(turn, unit, map_areas, out_of_action_units, morale, permanent=Fal
 
 # leader mortality
 def leader_mortality(turn, out_of_action_units):
-    for unit in out_of_action_units:
+    mortality = None
+    for unit in out_of_action_units[:]:
         if unit.unit_type == 'leader':
             mortality = random.choice(['kia', 'lightly wounded', 'healthy'])
             if mortality == 'kia':
@@ -137,4 +162,5 @@ def update_return_areas(selected_unit, map_areas):
 
 
 
-            
+    
+        
