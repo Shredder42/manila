@@ -2,14 +2,14 @@ import pygame
 from constants import *
 
 class AmericanUnit:
-    def __init__(self, unit, organization, unit_type, attack, 
-                move, setup, unit_fresh_image_filename, unit_spent_image_filename,
+    def __init__(self, unit, division, unit_type, attack_factor, 
+                movement_factor, setup, unit_fresh_image_filename, unit_spent_image_filename,
                 reinforcement = False, reinforcement_turn = None, leader = False):
         self.unit = unit
-        self.organization = organization
+        self.division = division
         self.unit_type = unit_type
-        self.attack = attack
-        self.move = move
+        self.attack_factor = attack_factor
+        self.movement_factor = movement_factor
         self.setup = setup
         self.unit_fresh_image_filename = unit_fresh_image_filename
         self.unit_spent_image_filename = unit_spent_image_filename
@@ -18,13 +18,15 @@ class AmericanUnit:
         self.leader = leader
         self.fresh_image = self.__load_images()[0]
         self.spent_image = self.__load_images()[1]
-        self.fresh = True
+        self.spent = False
         self.rect = self.fresh_image.get_rect()
         self.rect.x = 0
         self.rect.y = 0
         self.out_of_action = False
         self.withdrawn = False
+        self.paused = False
         self.moving = False
+        self.movement_factor_remaining = movement_factor
         self.selected = False
 
     def __load_images(self):
@@ -41,10 +43,21 @@ class AmericanUnit:
         '''
         draw the unit on the board or table
         '''
-        if self.fresh:
+        if not self.spent:
             surface.blit(self.fresh_image, self.rect)
         else:
             surface.blit(self.spent_image, self.rect)
+
+    def deduct_movement_cost(self, movement_cost, stop_required):
+        '''
+        deduct the movement cost for the unit's remaining movement factor
+        set it to 0 if stop is required after the move (moves into Japanese occupied Area)
+        '''
+        if stop_required:
+            self.movement_factor_remaining = 0
+        else:
+            self.movement_factor_remaining -= movement_cost
+
 
 class JapaneseUnit:
     def __init__(self, terrain, strategy, defense, unit_revealed_filename, unit_unrevealed_filename):

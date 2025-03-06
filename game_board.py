@@ -1,4 +1,5 @@
 import pygame
+from constants import *
 
 class MapArea:
     def __init__(self, x, y, identifier, terrain, terrain_effect_modifier, area_title, adjacent_areas, control='Japanese', stack_limit = 6):
@@ -32,18 +33,19 @@ class MapArea:
                 unit.rect.y = 490
 
     def add_unit_to_area(self, unit):
-        if self.stack_count and (self.stack_count == self.stack_limit) and unit.type in ('infantry', 'armor'):
+        if self.stack_count and (self.stack_count == self.stack_limit) and unit.type in STACKING_UNIT_TYPES:
             return 'Area at Stacking Limit'
         else:
             self.american_units.append(unit)
             self.__update_american_unit_positions()
-            if unit.unit_type in ('infantry', 'armor'):
+            if unit.unit_type in STACKING_UNIT_TYPES:
                 self.stack_count += 1
-            # print('ran add unit to area')
+            print('ran add unit to area')
 
     def remove_unit_from_area(self, unit):
         self.american_units.remove(unit)
-        self.stack_count -= 1
+        if unit.unit_type in STACKING_UNIT_TYPES:
+            self.stack_count -= 1
         self.__update_american_unit_positions()
             
 

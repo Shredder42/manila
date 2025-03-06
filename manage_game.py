@@ -163,22 +163,22 @@ def update_return_areas(selected_unit, map_areas):
         selected_unit.withdrawn = False
 
     else:
-        if selected_unit.organization == '37th Inf':
+        if selected_unit.division == '37th Inf':
             possible_areas.append(1)
-        elif selected_unit.organization == '1st Cav':
+        elif selected_unit.division == '1st Cav':
             possible_areas.append(2)
-        elif selected_unit.organization == '11th Air':
+        elif selected_unit.division == '11th Air':
             possible_areas.append(30)
 
         for area in map_areas:
             if area.american_units:
                 for unit in area.american_units:
-                    if unit.organization == selected_unit.organization:
+                    if unit.division == selected_unit.division:
                         possible_areas.append(area.identifier)
 
     selected_unit.setup = possible_areas
 
-# event
+# events
 def determine_game_event(potential_events, potential_event_weights, turn, game_events, map_areas):
     '''
     determine the event for the game turn
@@ -212,6 +212,9 @@ def determine_game_event(potential_events, potential_event_weights, turn, game_e
     
 
 def withdraw_44th_battallion(turn, american_units, map_areas, out_of_action_units, morale, premanent=False):
+    '''
+    withdraws the 3 units of the 44th tank battalion either permanently or temporarily
+    '''
     units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
 
     for unit in units_to_withdraw:
@@ -235,4 +238,54 @@ def update_out_of_action_unit_positions(out_of_action_units):
         else:
             unit.rect.y = OUT_OF_ACTION_Y4
     
+def pause_division(american_units, division):
+    '''
+    pause units in appropriate division based on event
+    '''
+    for unit in american_units:
+        if unit.division == division:
+            unit.paused = True
+
+
+# combat phase
+def calculate_movement_cost(move_to_area):
+    '''
+    calculates and returns the cost of moving a unit
+    also returns whether the unit is required to stop after entering 
+    '''
+    movement_cost = 0
+    if not move_to_area.japanese_unit:
+        for adjacent_area in move_to_area.adjacent_areas:
+            if adjacent_area.japanese_unit:
+                movement_cost = 2
+                break
+        else:
+            movement_cost = 1
+
+        stop_required = False
+
+    else:
+        if move_to_area.japanese_unit.revealed:
+            movement_cost = 3
+        elif not move_to_area.japanese_unit.revealed:
+            movement_cost = 4
+
+        stop_required = True
+    print('ran calc move cost')
+    return movement_cost, stop_required
+
+def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
+
+    if move_to_area.identifier in move_from_area.adjacent_areas:
+        if movement_cost <= unit.movement_factor_remaining:
+            message = move_to_area.add_unit_to_area(unit)
+            if not message:
+                unit.deduct_movement_cost(movement_cost, stop_required)
+                move_from_area.remove_unit_from_area(unit)
+        else:
+            message = 'Not enough movement factor'
+    else:
+        message = 'Must move to adjacent Area'
+    print('ran move unit')
+    return message
         

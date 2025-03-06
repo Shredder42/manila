@@ -109,6 +109,8 @@ def remove_from_action(unit, area, out_of_action_units):
 def main():
     running = True
     selected_unit = None
+    selected_area = None
+    move_from_area = None
     turn_index = 2 # this will increment at end of every turn (one below actual turn number)
     phase_index = 4 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
@@ -156,7 +158,7 @@ def main():
 
 
         for area in map_areas:
-            if area.rect.collidepoint(pos):
+            if (area.rect.collidepoint(pos) and not selected_area) or (PHASES[phase_index] == 'Combat' and selected_area == area):
                 # make everything below it's own function probably
                 # informational text
                 text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, area.area_title, 'white', HEADER_SIZE)
@@ -259,6 +261,44 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(pos)
+
+
+                # select area and lock it so can interact with the units in it (will also need to be in the event for iwabuchi)
+                # may also need it for bloody streets
+                # this might also be activating an area but would be different for blood streets (that would be the initial thing)
+                # modify this after moving cuz will be easier to move units around then
+                # figure out crashes after moving once
+                if PHASES[phase_index] == 'Combat':
+                    for area in map_areas:
+                        if area.rect.collidepoint(pos):
+                            if not selected_unit:
+                                if area == selected_area:
+                                    selected_area = None
+                                elif selected_area == None:
+                                    selected_area = area
+                                    move_from_area = area
+                            if selected_unit:
+                                print(f'selected unit is {selected_unit}')
+                                print(f'move from area is {move_from_area.identifier}')
+                                print(f'move to area {area.identifier}')
+                                movement_cost, stop_required = calculate_movement_cost(area)
+                                message = move_unit(selected_unit, move_from_area, area, movement_cost, stop_required)
+                                move_from_area = None
+                                print(area.american_units)
+                                print(message)
+
+                    # this frees up the area lock to see where moving unit
+                    # put in functionality for moving a unit
+                    # criteria for moving
+                        # movement available
+                        # vacant, adjacent to, or containing a japanese unit
+                    # show selected unit (probs where the reinforcement_units normally show)
+                    if selected_area:
+                        for unit in selected_area.american_units:
+                            if unit.rect.collidepoint(pos):
+                                selected_unit = unit
+                                selected_area = None
+
 
                 # turn_index = 5
 
@@ -371,14 +411,18 @@ def main():
 
                         if game_events[-1].type == 'Kembu Group Breakthrough':
                             withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
+                        elif game_events[-1].type == 'Pause 1st Cavalry':
+                            pause_division(american_units, '1st Cav')
+                        elif game_events[-1].type == 'Pause 37th Division':
+                            pause_division(american_units, '37th Inf')
+                        elif game_events[-1].type == 'Pause 11th Airborne':
+                            pause_division(american_units, '11th Air')
                         elif game_events[-1].type == 'Shimbu Group Breakthrough':
                             withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
 
                     # SUPPLY PHASE
                     if PHASES[phase_index] == 'Supply':
                         supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
-
-
 
 
         pygame.display.flip() # flip the display to put changes on screen

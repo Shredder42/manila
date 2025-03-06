@@ -52,6 +52,8 @@ ROW_6_Y = 280
 HEADER_SIZE = 25
 LINE_SIZE = 20
 
+STACKING_UNIT_TYPES = ('infantry', 'armor')
+
 # couldn't get these to go into the units class
 # unit_type = Enum('Unittype', ['INFANTRY', 'ARMOR', 'LEADER'])
 # organization = Enum('Organization', ['37TH_INF', '1ST_CAV', '11TH_AIR'])
