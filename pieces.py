@@ -25,6 +25,7 @@ class AmericanUnit:
         self.out_of_action = False
         self.withdrawn = False
         self.paused = False
+        self.attacking = False
         self.moving = False
         self.movement_factor_remaining = movement_factor
         self.selected = False

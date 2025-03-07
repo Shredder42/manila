@@ -25,6 +25,8 @@ clock = pygame.time.Clock()
 
 # all testing areas - may get removed later
 advance_button = Button(1450, 10, 'arrow.png')
+plan_button = Button(1450, 100, 'plan_attack.png')
+attack_button = Button(1450, 100, 'attack.png')
 american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units()
 legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
@@ -101,12 +103,12 @@ def main():
     selected_area = None
     move_from_area = None
     turn_index = 3 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 4 # this will increment at end of every phase and turn over at the end - update manually for now
+    phase_index = 3 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
     out_of_action_units = []
     game_events = []
-    supply_added = False # this will likely need to get moved (how to only allow supply to be added once per supply round (more granular phases???))
+    planning_attack = False
     morale_message_4 = None
 
     
@@ -136,6 +138,11 @@ def main():
             unit.draw(screen)
         if game_events and PHASES[phase_index] != 'Dawn':
             game_events[-1].draw(screen)
+        if PHASES[phase_index] == 'Combat' and selected_area and selected_area.contested:
+            if not planning_attack:
+                plan_button.draw(screen)
+            else:
+                attack_button.draw(screen)
         
         pos = pygame.mouse.get_pos()
 
@@ -172,6 +179,8 @@ def main():
                 if area.american_units:
                     text_on_screen(LEFT_EDGE_X, 345, 'American Units', 'white', LINE_SIZE)
                     for unit in area.american_units:
+                        if unit.attacking:
+                            highlight_unit(unit, screen)
                         unit.draw(screen)
 
         if legend_control_marker.rect.collidepoint(pos):
@@ -238,8 +247,17 @@ def main():
             text_on_screen(LEFT_EDGE_X, 580, 'Click to deploy one Armor Unit to each Area 1 and 2', 'white', LINE_SIZE)
 
         
-        if PHASES[phase_index] == 'Combat' and selected_unit:
-            selected_unit.draw(screen)
+        if PHASES[phase_index] == 'Combat':
+            if selected_unit:
+                selected_unit.draw(screen)
+
+            if selected_area and selected_area.contested:
+                if plan_button.rect.collidepoint(pos): 
+                    if not planning_attack:        
+                        text_on_screen(plan_button.rect.x - 5, plan_button.rect.y + 75, 'Plan Attack', 'white', LINE_SIZE)
+                    else:
+                        text_on_screen(plan_button.rect.x + 5, plan_button.rect.y + 75, 'Attack!', 'white', LINE_SIZE)
+
             # mandatory withdrawal
             # units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
             # for unit in units_to_withdraw:
@@ -260,41 +278,58 @@ def main():
                 print(pos)
 
 
+                # COMBAT
                 # select area and lock it so can interact with the units in it (will also need to be in the event for iwabuchi)
                 # may also need it for bloody streets
                 # this might also be activating an area but would be different for blood streets (that would be the initial thing)
                 # modify this after moving cuz will be easier to move units around then
                 # get unit selected for moving to stay on the screen
                 if PHASES[phase_index] == 'Combat':
-                    for area in map_areas:
-                        if area.rect.collidepoint(pos):
-                            if not selected_unit:
-                                if area == selected_area:
+                    if not planning_attack:
+                    # movement
+                        for area in map_areas:
+                            if area.rect.collidepoint(pos):
+                                if not selected_unit:
+                                    if area == selected_area:
+                                        selected_area = None
+                                    elif selected_area == None and area.american_units:
+                                        selected_area = area
+                                        move_from_area = area
+                                if selected_unit:
+                                    movement_cost, stop_required = calculate_movement_cost(area, map_areas)
+                                    message = move_unit(selected_unit, move_from_area, area, movement_cost, stop_required)
+                                    if message:
+                                        selected_unit.rect.x = previous_rect_x
+                                        selected_unit.rect.y = previous_rect_y
+                                    move_from_area = None
+                                    selected_unit = None
+                                    print(message)
+
+
+                        # show selected unit (probs where the reinforcement_units normally show)
+                        if selected_area:
+                            for unit in selected_area.american_units:
+                                if unit.rect.collidepoint(pos):
+                                    selected_unit = unit
+                                    previous_rect_x = unit.rect.x
+                                    previous_rect_y = unit.rect.y
+                                    update_rects_for_location_change([unit])
+                                    print(f'remaining movement factor: {selected_unit.movement_factor_remaining}')
                                     selected_area = None
-                                elif selected_area == None and area.american_units:
-                                    selected_area = area
-                                    move_from_area = area
-                            if selected_unit:
-                                movement_cost, stop_required = calculate_movement_cost(area, map_areas)
-                                message = move_unit(selected_unit, move_from_area, area, movement_cost, stop_required)
-                                if message:
-                                    selected_unit.rect.x = previous_rect_x
-                                    selected_unit.rect.y = previous_rect_y
-                                move_from_area = None
-                                selected_unit = None
-                                print(message)
 
 
-                    # show selected unit (probs where the reinforcement_units normally show)
-                    if selected_area:
-                        for unit in selected_area.american_units:
-                            if unit.rect.collidepoint(pos):
-                                selected_unit = unit
-                                previous_rect_x = unit.rect.x
-                                previous_rect_y = unit.rect.y
-                                update_rects_for_location_change([unit])
-                                print(f'remaining movement factor: {selected_unit.movement_factor_remaining}')
-                                selected_area = None
+                    # attacking
+                    if selected_area and selected_area.contested:
+                        if not planning_attack:
+                            if plan_button.rect.collidepoint(pos):
+                                planning_attack = True
+                                units_in_attack = []
+
+                        else:
+                            for unit in selected_area.american_units:
+                                if unit.rect.collidepoint(pos):
+                                    units_in_attack.append(unit)
+                                    unit.attacking = True
 
 
                 # turn_index = 5

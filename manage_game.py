@@ -37,6 +37,13 @@ def update_rects_for_location_change(units):
         unit.rect.x = 1020 + ((index % 6) * 60)
         unit.rect.y = 605
 
+def highlight_unit(unit, surface):
+
+    highlight_rect = pygame.Rect(0, 0, 52, 52)
+    highlight_rect.center = unit.rect.center
+    pygame.draw.rect(surface, 'green', highlight_rect)
+    
+
 # Reinforcements
 def identify_reinforcement_units(turn, american_units, reinforcement_units):
     '''
