@@ -158,6 +158,11 @@ def main():
 
 
         for area in map_areas:
+            if area.japanese_unit and area.american_units:
+                area.contested = True
+            else:
+                area.contested = False
+
             if (area.rect.collidepoint(pos) and not selected_area) or (PHASES[phase_index] == 'Combat' and selected_area == area):
                 # make everything below it's own function probably
                 # informational text
