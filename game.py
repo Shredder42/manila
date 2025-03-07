@@ -111,7 +111,7 @@ def main():
     selected_unit = None
     selected_area = None
     move_from_area = None
-    turn_index = 2 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 3 # this will increment at end of every turn (one below actual turn number)
     phase_index = 4 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
@@ -243,6 +243,8 @@ def main():
             text_on_screen(LEFT_EDGE_X, 580, 'Click to deploy one Armor Unit to each Area 1 and 2', 'white', LINE_SIZE)
 
         
+        if PHASES[phase_index] == 'Combat' and selected_unit:
+            selected_unit.draw(screen)
             # mandatory withdrawal
             # units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
             # for unit in units_to_withdraw:
@@ -267,36 +269,36 @@ def main():
                 # may also need it for bloody streets
                 # this might also be activating an area but would be different for blood streets (that would be the initial thing)
                 # modify this after moving cuz will be easier to move units around then
-                # figure out crashes after moving once
+                # get unit selected for moving to stay on the screen
                 if PHASES[phase_index] == 'Combat':
                     for area in map_areas:
                         if area.rect.collidepoint(pos):
                             if not selected_unit:
                                 if area == selected_area:
                                     selected_area = None
-                                elif selected_area == None:
+                                elif selected_area == None and area.american_units:
                                     selected_area = area
                                     move_from_area = area
                             if selected_unit:
-                                print(f'selected unit is {selected_unit}')
-                                print(f'move from area is {move_from_area.identifier}')
-                                print(f'move to area {area.identifier}')
-                                movement_cost, stop_required = calculate_movement_cost(area)
+                                movement_cost, stop_required = calculate_movement_cost(area, map_areas)
                                 message = move_unit(selected_unit, move_from_area, area, movement_cost, stop_required)
+                                if message:
+                                    selected_unit.rect.x = previous_rect_x
+                                    selected_unit.rect.y = previous_rect_y
                                 move_from_area = None
-                                print(area.american_units)
+                                selected_unit = None
                                 print(message)
 
-                    # this frees up the area lock to see where moving unit
-                    # put in functionality for moving a unit
-                    # criteria for moving
-                        # movement available
-                        # vacant, adjacent to, or containing a japanese unit
+
                     # show selected unit (probs where the reinforcement_units normally show)
                     if selected_area:
                         for unit in selected_area.american_units:
                             if unit.rect.collidepoint(pos):
                                 selected_unit = unit
+                                previous_rect_x = unit.rect.x
+                                previous_rect_y = unit.rect.y
+                                update_rects_for_location_change([unit])
+                                print(f'remaining movement factor: {selected_unit.movement_factor_remaining}')
                                 selected_area = None
 
 

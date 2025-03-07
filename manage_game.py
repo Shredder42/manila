@@ -28,6 +28,15 @@ def advance_game(phase_index, turn_index):
 
     return phase_index, turn_index
 
+def update_rects_for_location_change(units):
+    '''
+    update the rects on units to put them in the row for moving on the map
+    either as reinforcements or for movement
+    '''
+    for index, unit in enumerate(units):
+        unit.rect.x = 1020 + ((index % 6) * 60)
+        unit.rect.y = 605
+
 # Reinforcements
 def identify_reinforcement_units(turn, american_units, reinforcement_units):
     '''
@@ -38,9 +47,7 @@ def identify_reinforcement_units(turn, american_units, reinforcement_units):
         if unit.reinforcement_turn == turn:
             reinforcement_units.append(unit)
 
-    for index, unit in enumerate(reinforcement_units):
-        unit.rect.x = 1020 + ((index % 6) * 60)
-        unit.rect.y = 605
+    update_rects_for_location_change(reinforcement_units)
     
     # print(reinforcement_units)
     return reinforcement_units
@@ -248,14 +255,15 @@ def pause_division(american_units, division):
 
 
 # combat phase
-def calculate_movement_cost(move_to_area):
+def calculate_movement_cost(move_to_area, map_areas):
     '''
     calculates and returns the cost of moving a unit
     also returns whether the unit is required to stop after entering 
     '''
     movement_cost = 0
     if not move_to_area.japanese_unit:
-        for adjacent_area in move_to_area.adjacent_areas:
+        adjacent_areas = [area for area in map_areas if area.identifier in move_to_area.adjacent_areas]
+        for adjacent_area in adjacent_areas:
             if adjacent_area.japanese_unit:
                 movement_cost = 2
                 break
