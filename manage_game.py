@@ -296,4 +296,48 @@ def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
         message = 'Must move to adjacent Area'
     print('ran move unit')
     return message
+
+def bloody_streets_roll(area):
+    roll = random.randint(1, 6)
+    if area.japanese_unit.strategy == 'elite':
+        roll += 1
+
+    return roll
+
+def bloody_streets(bloody_streets_areas, out_of_action_units):
+    morale_loss = 0
+    results = []
+    for area in bloody_streets_areas:
+        roll = bloody_streets_roll(area)
+        if roll == 4:
+            casualty_unit = random.choice(area.american_units) # this is change from actual rules - prefer if lost unit is random
+            remove_from_action(casualty_unit, area, out_of_action_units)
+            results.append(f'{unit.unit} of the {unit.division} was knocked Out of Action from Area {area.identifier}: {area.area_title}')
+        elif roll == 5:
+            morale_loss += 1
+        elif roll >= 6:
+            morale_loss += 1
+            for unit in area.american_units:
+                unit.spent = True
+            results.append(f'All units in Area {area.identifier}: {area.area_title} are spent')
+    return morale_loss, results
+
+def remove_from_action(unit, area, out_of_action_units):
+    '''
+    remove American unit from action to out of action as a result of battle
+    '''
+    area.remove_unit_from_area(unit)
+    unit.out_of_action = True
+    out_of_action_units.append(unit)
+    update_out_of_action_unit_positions(out_of_action_units)
+
+    return out_of_action_units
+
+
+
+    
+
+
+
+
         

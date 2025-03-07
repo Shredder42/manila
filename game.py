@@ -63,8 +63,8 @@ deploy_japanese_units(map_areas, 'urban', japanese_units_urban)
 american_setup_map_areas = [map_areas[0], map_areas[1], map_areas[29]]
 deploy_initial_american_units(american_setup_map_areas, american_units)
 # these lines for testing - remove when done
-map_areas[0].japanese_unit = test_unit2 
-map_areas[2].contested = True
+# map_areas[0].japanese_unit = test_unit2 
+# map_areas[2].contested = True
 
 def text_on_screen(x, y, message, color, size):
     font = pygame.font.SysFont('times new roman', size)
@@ -73,17 +73,6 @@ def text_on_screen(x, y, message, color, size):
     text_rect.x = x
     text_rect.y = y
     screen.blit(text, text_rect)
-
-def remove_from_action(unit, area, out_of_action_units):
-    '''
-    remove American unit from action to out of action as a result of battle
-    '''
-    area.remove_unit_from_area(unit)
-    unit.out_of_action = True
-    out_of_action_units.append(unit)
-    update_out_of_action_unit_positions(out_of_action_units)
-
-    return out_of_action_units
 
 # def update_out_of_action_unit_positions(out_of_action_units):
 #     '''
@@ -128,7 +117,10 @@ def main():
         text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
         text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', 30)
         text_on_screen(LEFT_EDGE_X, 90, f'Event:', 'white', 30) # placeholding for now -> Update
-        text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', 30)
+        if PHASES[phase_index] != 'Combat':
+            text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', 30)
+            for unit in out_of_action_units:
+                unit.draw(screen)
         advance_button.draw(screen)
         legend_control_marker.draw(screen)
         for support_unit in support_units:
@@ -140,8 +132,6 @@ def main():
         text_on_screen(90, 830, str(support_units[0].count), 'black', 30)
         text_on_screen(90, 890, str(support_units[1].count), 'black', 30)
         text_on_screen(90, 950, str(supply.count), 'black', 30)
-        for unit in out_of_action_units:
-            unit.draw(screen)
         for unit in reinforcement_units:
             unit.draw(screen)
         if game_events and PHASES[phase_index] != 'Dawn':
@@ -430,6 +420,18 @@ def main():
                     # SUPPLY PHASE
                     if PHASES[phase_index] == 'Supply':
                         supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
+
+                    # COMBAT PHASE
+                    if PHASES[phase_index] == 'Combat':
+                        bloody_streets_areas = [area for area in map_areas if area.contested]
+                        if bloody_streets_areas:
+                            morale_loss, bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units)
+                            morale.adjust_morale(-morale_loss)
+                            print(f'Morale dropped by {morale_loss} points')
+                            if bloody_streets_results:
+                                for result in bloody_streets_results:
+                                    print(result)
+
 
 
         pygame.display.flip() # flip the display to put changes on screen
