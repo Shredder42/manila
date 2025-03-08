@@ -36,12 +36,6 @@ def update_rects_for_location_change(units):
     for index, unit in enumerate(units):
         unit.rect.x = 1020 + ((index % 6) * 60)
         unit.rect.y = 605
-
-def highlight_unit(unit, surface):
-
-    highlight_rect = pygame.Rect(0, 0, 52, 52)
-    highlight_rect.center = unit.rect.center
-    pygame.draw.rect(surface, 'green', highlight_rect)
     
 
 # Reinforcements
@@ -340,6 +334,25 @@ def remove_from_action(unit, area, out_of_action_units):
 
     return out_of_action_units
 
+def highlight_unit(unit, surface):
+    '''
+    higlights selected unit by drawing green box underneath
+    '''
+    highlight_rect = pygame.Rect(0, 0, 52, 52)
+    highlight_rect.center = unit.rect.center
+    pygame.draw.rect(surface, 'green', highlight_rect)
+
+def request_support(support_unit_battle, support_units):
+    '''
+    adds a support unit 
+    '''
+    if support_unit_battle.type == 'artillery support':
+        support_unit_index = 0
+    else:
+        support_unit_index = 1
+    if support_units[support_unit_index].count > 0:
+        support_unit_battle.add_support_unit()
+        support_units[support_unit_index].use_support_unit()
 
 
     

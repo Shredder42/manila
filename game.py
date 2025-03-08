@@ -2,7 +2,7 @@ import os
 import pygame
 import random
 from constants import *
-from pieces import AmericanUnit, JapaneseUnit, create_units, create_morale, create_control_marker, create_supply, create_events
+from pieces import AmericanUnit, JapaneseUnit, SupportUnit, create_units, create_morale, create_control_marker, create_supply, create_events
 from game_board import MapArea, create_map
 from manage_game import *
 
@@ -12,7 +12,7 @@ pygame.font.init()
 
 
 # To Do
-    # move the message center to lower right corner and everything else up?
+
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Manila - The Savage Streets, 1945')
@@ -32,6 +32,8 @@ legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
 supply = create_supply()
 potential_events, potential_event_weights = create_events()
+artillery_support_attack = SupportUnit('artillery support', 0, 1, 1, 'artillery_support_front.png', LEFT_EDGE_X, 585)
+engineer_support_attack = SupportUnit('engineer support', 0, 2, 2, 'engineer_support_front.png', LEFT_EDGE_X, 645)
 test_unit1 = random.choice(american_units)
 test_unit2 = random.choice(japanese_units_clear)
 
@@ -116,11 +118,11 @@ def main():
         screen.fill(ESPRESSO)
         screen.blit(game_board, (0,0))
         pygame.draw.rect(screen, BAY_COLOR, (30, 695, 230, 290))
-        text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', 30)
-        text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', 30)
-        text_on_screen(LEFT_EDGE_X, 90, f'Event:', 'white', 30) # placeholding for now -> Update
+        text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', COUNTER_SIZE)
+        text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', COUNTER_SIZE)
+        text_on_screen(LEFT_EDGE_X, 90, f'Event:', 'white', COUNTER_SIZE)
         if PHASES[phase_index] != 'Combat':
-            text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', 30)
+            text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', COUNTER_SIZE)
             for unit in out_of_action_units:
                 unit.draw(screen)
         advance_button.draw(screen)
@@ -129,11 +131,11 @@ def main():
             support_unit.draw(screen)
         morale.draw(screen)
         supply.draw(screen)
-        text_on_screen(90, 710, str(areas_controlled), 'black', 30)
-        text_on_screen(90, 770, str(morale.count), 'black', 30)
-        text_on_screen(90, 830, str(support_units[0].count), 'black', 30)
-        text_on_screen(90, 890, str(support_units[1].count), 'black', 30)
-        text_on_screen(90, 950, str(supply.count), 'black', 30)
+        text_on_screen(90, 710, str(areas_controlled), 'black', COUNTER_SIZE)
+        text_on_screen(90, 770, str(morale.count), 'black', COUNTER_SIZE)
+        text_on_screen(90, 830, str(support_units[0].count), 'black', COUNTER_SIZE)
+        text_on_screen(90, 890, str(support_units[1].count), 'black', COUNTER_SIZE)
+        text_on_screen(90, 950, str(supply.count), 'black', COUNTER_SIZE)
         for unit in reinforcement_units:
             unit.draw(screen)
         if game_events and PHASES[phase_index] != 'Dawn':
@@ -143,6 +145,11 @@ def main():
                 plan_button.draw(screen)
             else:
                 attack_button.draw(screen)
+                text_on_screen(LEFT_EDGE_X, 550, 'Request Support', 'white', HEADER_SIZE)
+                artillery_support_attack.draw(screen)
+                text_on_screen(1078, 600, str(artillery_support_attack.count), 'white', COUNTER_SIZE)
+                engineer_support_attack.draw(screen)
+                text_on_screen(1078, 660, str(engineer_support_attack.count), 'white', COUNTER_SIZE)
         
         pos = pygame.mouse.get_pos()
 
@@ -330,6 +337,11 @@ def main():
                                 if unit.rect.collidepoint(pos):
                                     units_in_attack.append(unit)
                                     unit.attacking = True
+                            if artillery_support_attack.rect.collidepoint(pos):
+                                request_support(artillery_support_attack, support_units)
+                            if engineer_support_attack.rect.collidepoint(pos):
+                                request_support(engineer_support_attack, support_units)
+
 
 
                 # turn_index = 5
@@ -376,18 +388,18 @@ def main():
                     if support_units[0].rect.collidepoint(pos):
                         message = supply.spend_supply(support_units[0].type)
                         if not message:
-                            support_units[0].count +=1
+                            support_units[0].add_support_unit()
                     # engineer support
                     if support_units[1].rect.collidepoint(pos):
                         message = supply.spend_supply(support_units[1].type)
                         if not message:
-                            support_units[1].count +=1
+                            support_units[1].add_support_unit()
                     # increase morale
                     if morale.rect.collidepoint(pos):
                         if morale.count < 19:
                             message = supply.spend_supply('increase morale')
                             if not message:
-                                morale.count +=1
+                                morale.adjust_morale(1)
                         else:
                             morale_message_4 = 'Morale already at max'
                     # return unit to map - MAYBE WANT TO CLEAN THIS UP
@@ -422,6 +434,9 @@ def main():
                 # advancing the game
                 if advance_button.rect.collidepoint(pos):
                     phase_index, turn_index = advance_game(phase_index, turn_index)
+                    selected_area = None
+                    selected_unit = None
+                    planning_attack = False
 
                     # DAWN PHASE
                     if PHASES[phase_index] == 'Dawn':

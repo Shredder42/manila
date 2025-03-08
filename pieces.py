@@ -119,6 +119,13 @@ class SupportUnit:
         '''
         surface.blit(self.image, self.rect)
 
+    def add_support_unit(self):
+        self.count += 1
+
+    def use_support_unit(self):
+        if self.count > 0:
+            self.count -= 1
+
 class Morale:
     def __init__(self):
         self.strong_filepath = './images/morale_strong.png'

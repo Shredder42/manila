@@ -51,6 +51,7 @@ ROW_6_Y = 280
 
 HEADER_SIZE = 25
 LINE_SIZE = 20
+COUNTER_SIZE = 30
 
 STACKING_UNIT_TYPES = ('infantry', 'armor')
 
