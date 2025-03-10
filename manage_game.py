@@ -336,23 +336,84 @@ def remove_from_action(unit, area, out_of_action_units):
 
 def highlight_unit(unit, surface):
     '''
-    higlights selected unit by drawing green box underneath
+    higlights selected unit by drawing box underneath
     '''
-    highlight_rect = pygame.Rect(0, 0, 52, 52)
+    highlight_rect = pygame.Rect(0, 0, 54, 54)
     highlight_rect.center = unit.rect.center
-    pygame.draw.rect(surface, 'green', highlight_rect)
+    if unit.attack_lead:
+        color = 'red'
+    else:
+        color = 'green'
+    pygame.draw.rect(surface, color, highlight_rect)
 
-def request_support(support_unit_battle, support_units):
+
+def request_support(support_unit_attack, support_units):
     '''
-    adds a support unit 
+    adds a support unit to the attack
     '''
-    if support_unit_battle.type == 'artillery support':
+    if support_unit_attack.type == 'artillery support':
         support_unit_index = 0
     else:
         support_unit_index = 1
     if support_units[support_unit_index].count > 0:
-        support_unit_battle.add_support_unit()
+        support_unit_attack.add_support_unit()
         support_units[support_unit_index].use_support_unit()
+
+def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, event, area, mandatory):
+    attack_value = 0
+
+    infantry_unit = False
+    armor_unit = False
+    leader_units = []
+    fighting_units = []
+    for unit in attacking_units[:]:
+        if unit.unit_type == 'infantry':
+            infantry_unit = True
+        if unit.unit_type == 'armor':
+            armor_unit = True
+        if unit.unit_type == 'leader':
+            leader_units.append(unit)
+        else:
+            fighting_units.append(unit)
+
+    # value if lead attack unit selected
+    if lead_attack_unit:
+        attack_value += lead_attack_unit.attack_factor
+
+        for i in range(len(fighting_units) - 1):
+            attack_value += 1
+    # value if lead attack unit not selected
+    else:
+        attack_value += len(fighting_units)
+
+    if leader_units:
+        for leader in leader_units:
+            for unit in fighting_units:
+                if leader.division == unit.division:
+                    attack_value += 1
+                    break 
+            else:
+                continue
+
+    # artillery support
+    attack_value += artillery_support_attack.count * artillery_support_attack.attack_value
+    # engineer support
+    attack_value += engineer_support_attack.count * engineer_support_attack.attack_value
+    # combined arms
+    if area.terrain == 'clear':
+        if infantry_unit and armor_unit and (artillery_support_attack.count > 0 or engineer_support_attack.count > 0):
+            attack_value += 1
+    else: # rubble optional rule
+        if infantry_unit and armor_unit and engineer_support_attack.count > 0:
+            attack_value += 1
+    # morale
+    if not morale.shaken:
+        attack_value += 1
+    # event
+    if mandatory and event.type == 'Civilians and Refugees':
+        attack_value -= 1
+
+    return attack_value
 
 
     

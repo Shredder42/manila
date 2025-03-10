@@ -26,6 +26,7 @@ class AmericanUnit:
         self.withdrawn = False
         self.paused = False
         self.attacking = False
+        self.attack_lead = False
         self.moving = False
         self.movement_factor_remaining = movement_factor
         self.selected = False
@@ -94,10 +95,10 @@ class JapaneseUnit:
             surface.blit(self.revealed_image, self.rect)
 
 class SupportUnit:
-    def __init__(self, type, count, attack, cost, filename, x, y):
+    def __init__(self, type, count, attack_value, cost, filename, x, y):
         self.type = type
         self.count = count
-        self.attack = attack
+        self.attack_value = attack_value
         self.cost = cost
         self.filename = filename
         self.image = self.__load_image()

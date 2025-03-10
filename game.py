@@ -104,13 +104,16 @@ def main():
     selected_unit = None
     selected_area = None
     move_from_area = None
-    turn_index = 3 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 3 # this will increment at end of every phase and turn over at the end - update manually for now
+    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
+    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
     out_of_action_units = []
     game_events = []
     planning_attack = False
+    attack_value = 0
+    lead_attack_unit = None
+    defense_value = 0
     morale_message_4 = None
 
     
@@ -150,6 +153,7 @@ def main():
                 text_on_screen(1078, 600, str(artillery_support_attack.count), 'white', COUNTER_SIZE)
                 engineer_support_attack.draw(screen)
                 text_on_screen(1078, 660, str(engineer_support_attack.count), 'white', COUNTER_SIZE)
+                text_on_screen(LEFT_EDGE_X, 710, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
         
         pos = pygame.mouse.get_pos()
 
@@ -202,7 +206,7 @@ def main():
         for support_unit in support_units:
             if support_unit.rect.collidepoint(pos):
                 text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, support_unit.type.title(), 'white', HEADER_SIZE)
-                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'+{support_unit.attack} to Attack Value', 'white', LINE_SIZE)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'+{support_unit.attack_value} to Attack Value', 'white', LINE_SIZE)
                 text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'Supply Cost: {support_unit.cost} Point(s)', 'white', LINE_SIZE)
                 if support_unit.type == 'engineer support':
                     support_unit_message = 'Required for Combined Arms Bonus in Urban and Fort Areas'
@@ -263,7 +267,10 @@ def main():
                     if not planning_attack:        
                         text_on_screen(plan_button.rect.x - 5, plan_button.rect.y + 75, 'Plan Attack', 'white', LINE_SIZE)
                     else:
-                        text_on_screen(plan_button.rect.x + 5, plan_button.rect.y + 75, 'Attack!', 'white', LINE_SIZE)
+                        if lead_attack_unit:
+                            text_on_screen(plan_button.rect.x + 5, plan_button.rect.y + 75, 'Attack!', 'white', LINE_SIZE)
+                        else:
+                            text_on_screen(LEFT_EDGE_X, SCREEN_HEIGHT - 30, 'Designate lead attack unit', 'white', LINE_SIZE)
 
             # mandatory withdrawal
             # units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
@@ -330,17 +337,40 @@ def main():
                         if not planning_attack:
                             if plan_button.rect.collidepoint(pos):
                                 planning_attack = True
-                                units_in_attack = []
+                                attacking_units = []
 
                         else:
                             for unit in selected_area.american_units:
                                 if unit.rect.collidepoint(pos):
-                                    units_in_attack.append(unit)
-                                    unit.attacking = True
+                                    if not unit.paused: # deal with paused and spent units (spent units also can't move)
+                                        if not unit.attacking: # puts unit in attack
+                                            attacking_units.append(unit)
+                                            unit.attacking = True
+                                        elif unit.attacking:
+                                            if not unit.attack_lead: # makes unit lead attack unit
+                                                if lead_attack_unit:
+                                                    lead_attack_unit.attack_lead = False
+                                                unit.attack_lead = True
+                                                lead_attack_unit = unit
+                                            else: # removes unit from attacking (and no longer lead)
+                                                attacking_units.remove(unit)
+                                                unit.attacking = False
+                                                unit.attack_lead = False
+                                                lead_attack_unit = None
+                                    else:
+                                        print('Unit is paused and may not attack')
+                                        
                             if artillery_support_attack.rect.collidepoint(pos):
-                                request_support(artillery_support_attack, support_units)
+                                if (TURNS[turn_index][0] < 4 and artillery_support_attack.count == 0) or TURNS[turn_index][0] >= 4:
+                                    request_support(artillery_support_attack, support_units)
+                                else: # historical artillery support restrictions optional rule
+                                    print('More than 1 Artillery Support not allowed')
                             if engineer_support_attack.rect.collidepoint(pos):
                                 request_support(engineer_support_attack, support_units)
+
+                            attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
+
+                            
 
 
 
