@@ -415,6 +415,23 @@ def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_
 
     return attack_value
 
+# def calculate_defense_value(area, morale):
+#     if not area.japanese_unit.revealed:
+#         defense_value = '?'
+
+#     else:
+#         defense_value = 0
+
+#         defense_value += area.japanese_unit.defense_factor
+
+#         defense_value += area.terrain_effect_modifier
+
+#         if morale.shaken:
+#             defense_value += 1
+#     print('ran defense value')
+#     print(f'defense value: {defense_value}')
+#     print(area.japanese_unit.revealed)
+#     return defense_value
 
     
 

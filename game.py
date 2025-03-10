@@ -111,9 +111,9 @@ def main():
     out_of_action_units = []
     game_events = []
     planning_attack = False
+    attacking_units = []
     attack_value = 0
     lead_attack_unit = None
-    defense_value = 0
     morale_message_4 = None
 
     
@@ -154,6 +154,7 @@ def main():
                 engineer_support_attack.draw(screen)
                 text_on_screen(1078, 660, str(engineer_support_attack.count), 'white', COUNTER_SIZE)
                 text_on_screen(LEFT_EDGE_X, 710, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
+                text_on_screen(LEFT_EDGE_X, 740, f'Defense Value: {selected_area.defense_value}', 'white', HEADER_SIZE)
         
         pos = pygame.mouse.get_pos()
 
@@ -163,6 +164,7 @@ def main():
         # testing - remove
         # test_unit1.draw(screen)
         # test_unit2.draw(screen)
+        
 
 
         for area in map_areas:
@@ -293,9 +295,9 @@ def main():
 
 
                 # COMBAT
+                # may want to rework this entire section to be more efficient
+                    # only select area once (and only if contains fresh american units)
                 # select area and lock it so can interact with the units in it (will also need to be in the event for iwabuchi)
-                # may also need it for bloody streets
-                # this might also be activating an area but would be different for blood streets (that would be the initial thing)
                 # modify this after moving cuz will be easier to move units around then
                 # get unit selected for moving to stay on the screen
                 if PHASES[phase_index] == 'Combat':
@@ -337,7 +339,7 @@ def main():
                         if not planning_attack:
                             if plan_button.rect.collidepoint(pos):
                                 planning_attack = True
-                                attacking_units = []
+                                # attacking_units = []
 
                         else:
                             for unit in selected_area.american_units:
@@ -359,7 +361,7 @@ def main():
                                                 lead_attack_unit = None
                                     else:
                                         print('Unit is paused and may not attack')
-                                        
+
                             if artillery_support_attack.rect.collidepoint(pos):
                                 if (TURNS[turn_index][0] < 4 and artillery_support_attack.count == 0) or TURNS[turn_index][0] >= 4:
                                     request_support(artillery_support_attack, support_units)
@@ -369,7 +371,11 @@ def main():
                                 request_support(engineer_support_attack, support_units)
 
                             attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
-
+                            # selected_area.japanese_unit.revealed = True
+                            selected_area.calculate_defense_value(morale) # have this run whenever the japanese unit gets revealed like the line above
+                            # print(area.identifier)
+                            # print(area.japanese_unit.revealed)
+                            # defense_value = calculate_defense_value(selected_area, morale)
                             
 
 

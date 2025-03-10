@@ -17,6 +17,7 @@ class MapArea:
         self.stack_count = 0
         self.american_units = []
         self.japanese_unit = None # maybe a funtion to randomly pick the unit (this is currently in game.py)
+        self.defense_value = '?'
 
     def __update_american_unit_positions(self):
         '''
@@ -47,6 +48,22 @@ class MapArea:
         if unit.unit_type in STACKING_UNIT_TYPES:
             self.stack_count -= 1
         self.__update_american_unit_positions()
+
+
+    def calculate_defense_value(self, morale):
+        if not self.japanese_unit.revealed:
+            self.defense_value = '?'
+
+        else:
+            self.defense_value = 0
+
+            self.defense_value += self.japanese_unit.defense_factor
+
+            self.defense_value += self.terrain_effect_modifier
+
+            if morale.shaken:
+                self.defense_value += 1
+
             
 
 

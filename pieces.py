@@ -62,14 +62,14 @@ class AmericanUnit:
 
 
 class JapaneseUnit:
-    def __init__(self, terrain, strategy, defense, unit_revealed_filename, unit_unrevealed_filename):
+    def __init__(self, terrain, strategy, defense_factor, unit_revealed_filename, unit_unrevealed_filename):
         self.terrain = terrain
         self.strategy = strategy
         self.unit_unrevealed_filename = unit_unrevealed_filename
         self.unit_revealed_filename = unit_revealed_filename
         self.unrevealed_image = self.__load_images()[0]
         self.revealed_image = self.__load_images()[1]
-        self.defense = defense
+        self.defense_factor = defense_factor
         self.revealed = False
         self.rect = self.unrevealed_image.get_rect()
         self.rect.x = 1020
