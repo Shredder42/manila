@@ -362,13 +362,14 @@ def main():
                                     else:
                                         print('Unit is paused and may not attack')
 
-                            if artillery_support_attack.rect.collidepoint(pos):
-                                if (TURNS[turn_index][0] < 4 and artillery_support_attack.count == 0) or TURNS[turn_index][0] >= 4:
-                                    request_support(artillery_support_attack, support_units)
-                                else: # historical artillery support restrictions optional rule
-                                    print('More than 1 Artillery Support not allowed')
-                            if engineer_support_attack.rect.collidepoint(pos):
-                                request_support(engineer_support_attack, support_units)
+                            if artillery_support_attack.count + engineer_support_attack.count < len(attacking_units): # support limit 9.5.4
+                                if artillery_support_attack.rect.collidepoint(pos):
+                                    if (TURNS[turn_index][0] < 4 and artillery_support_attack.count == 0) or TURNS[turn_index][0] >= 4:
+                                        request_support(artillery_support_attack, support_units)
+                                    else: # historical artillery support restrictions optional rule
+                                        print('More than 1 Artillery Support not allowed')
+                                if engineer_support_attack.rect.collidepoint(pos):
+                                    request_support(engineer_support_attack, support_units)
 
                             attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
                             # selected_area.japanese_unit.revealed = True
