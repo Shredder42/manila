@@ -105,7 +105,7 @@ def main():
     selected_area = None
     move_from_area = None
     turn_index = 1 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
+    phase_index = 3 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
     out_of_action_units = []
@@ -351,6 +351,19 @@ def main():
 
 
                     # attacking
+                    if attacking: # clear everything after attack
+                        selected_area.japanese_unit.strategy_available = False
+                        for unit in attacking_units:
+                            unit.attacking = False
+                            unit.attack_lead = False
+                            unit.spent = True
+                        attacking_units = []
+                        attack_value = 0
+                        attack_result = None
+                        selected_area = None
+                        attacking = False
+
+
                     if selected_area and selected_area.contested:
                         if not planning_attack:
                             if plan_button.rect.collidepoint(pos):
@@ -405,9 +418,10 @@ def main():
                                     #     sniper
                                     #     ambush
                                     #     barrage
-                                    # japanese unit no longer strategy available
-                                    # click to release the area, units, lead unit, set units to spent, attack_value to zero, attacking to false
-                                    #     attack_result to none, unhighlight units (may occur with one of the other criteria)
+
+
+                            
+
 
 
 
@@ -548,6 +562,8 @@ def main():
                             if bloody_streets_results:
                                 for result in bloody_streets_results:
                                     print(result)
+
+
 
 
 
