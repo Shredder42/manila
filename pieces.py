@@ -29,6 +29,7 @@ class AmericanUnit:
         self.attack_lead = False
         self.moving = False
         self.movement_factor_remaining = movement_factor
+        self.previous_area = None
         self.selected = False
 
     def __load_images(self):
@@ -72,6 +73,7 @@ class JapaneseUnit:
         self.defense_factor = defense_factor
         self.revealed = False
         self.rect = self.unrevealed_image.get_rect()
+        self.strategy_available = True
         self.rect.x = 1020
         self.rect.y = 270 # may want to bump this down a smidge
 

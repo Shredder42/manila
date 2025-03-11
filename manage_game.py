@@ -36,6 +36,23 @@ def update_rects_for_location_change(units):
     for index, unit in enumerate(units):
         unit.rect.x = 1020 + ((index % 6) * 60)
         unit.rect.y = 605
+
+def roll_dice(dice_to_roll, drop_lowest=False):
+    '''
+    rolls the specified number of dice
+    option to drop the lowest die
+    '''
+
+    die_results = []
+
+    for i in range(dice_to_roll):
+        die_results.append(random.randint(1, 6))
+
+    if drop_lowest: 
+        sorted_die_results = sorted(die_results)
+        die_results = sorted_die_results[1:]
+        
+    return sum(die_results)
     
 
 # Reinforcements
@@ -155,9 +172,9 @@ def leader_mortality(turn, out_of_action_units):
 # supply
 def get_supply(turn, event):
     if event in ('Kembu Group Offensive', 'Shimbu Group Offensive'):
-        supply = sum([random.randint(1,6), random.randint(1,6)])
+        supply = roll_dice(2)
     else:
-        supply = sum([random.randint(1,6), random.randint(1,6), random.randint(1,6), random.randint(1,6)])
+        supply = roll_dice(4)
     if turn == 1:
         supply = max(supply, 12)
     return supply
@@ -415,23 +432,40 @@ def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_
 
     return attack_value
 
-# def calculate_defense_value(area, morale):
-#     if not area.japanese_unit.revealed:
-#         defense_value = '?'
+def attack(attack_value, area, attacking_units):
 
-#     else:
-#         defense_value = 0
+    attack_battle_value = roll_dice(2)
+    if area.japanese_unit.strategy_available and area.japanese_unit.strategy == 'elite':
+        defense_battle_value = roll_dice(3, drop_lowest=True)
+    else:
+        defense_battle_value = roll_dice(2)
 
-#         defense_value += area.japanese_unit.defense_factor
+    total_attack_value = attack_value + attack_battle_value
+    total_defense_value = area.defense_value + defense_battle_value
 
-#         defense_value += area.terrain_effect_modifier
+    return attack_battle_value, defense_battle_value, total_attack_value, total_defense_value
 
-#         if morale.shaken:
-#             defense_value += 1
-#     print('ran defense value')
-#     print(f'defense value: {defense_value}')
-#     print(area.japanese_unit.revealed)
-#     return defense_value
+def determine_attack_result(total_attack_value, total_defense_value, area):
+    if total_attack_value < total_defense_value:
+        outcome = 'repulse'
+    elif total_attack_value == total_defense_value:
+        outcome = 'stalemate'
+    else:
+        outcome = 'success'
+
+    if outcome == 'success' and total_attack_value - total_defense_value > total_defense_value:
+        outcome = 'overrun' 
+
+    if outcome == 'success' and area.japanese_unit.strategy_available and area.japanese_unit.strategy == 'fanatic':
+        outcome = 'stalemate'
+    
+    return outcome
+
+
+
+
+
+
 
     
 

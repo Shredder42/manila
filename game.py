@@ -113,6 +113,8 @@ def main():
     planning_attack = False
     attacking_units = []
     attack_value = 0
+    attacking = False
+    # attack_result = None
     lead_attack_unit = None
     morale_message_4 = None
 
@@ -145,7 +147,16 @@ def main():
             game_events[-1].draw(screen)
         if PHASES[phase_index] == 'Combat' and selected_area and selected_area.contested:
             if not planning_attack:
-                plan_button.draw(screen)
+                if not attacking:
+                    plan_button.draw(screen)
+                else:
+                    text_on_screen(LEFT_EDGE_X, 550, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
+                    text_on_screen(LEFT_EDGE_X, 580, f'Die Roll: {attack_battle_value}', 'white', HEADER_SIZE)
+                    text_on_screen(LEFT_EDGE_X, 610, f'Total Attack Value: {total_attack_value}', 'white', HEADER_SIZE)
+                    text_on_screen(LEFT_EDGE_X, 640, f'Defense Value: {selected_area.defense_value}', 'white', HEADER_SIZE)
+                    text_on_screen(LEFT_EDGE_X, 670, f'Die Roll: {defense_battle_value}', 'white', HEADER_SIZE)
+                    text_on_screen(LEFT_EDGE_X, 700, f'Total Defense Value: {total_defense_value}', 'white', HEADER_SIZE)
+                    text_on_screen(LEFT_EDGE_X, 730, f'Attack Result: {attack_result.capitalize()}', 'white', HEADER_SIZE)
             else:
                 attack_button.draw(screen)
                 text_on_screen(LEFT_EDGE_X, 550, 'Request Support', 'white', HEADER_SIZE)
@@ -186,7 +197,10 @@ def main():
             
                 # display japanese_unit
                 if area.japanese_unit:
-                    text_on_screen(LEFT_EDGE_X, 245, 'Japanese Unit', 'white', LINE_SIZE)
+                    if not area.japanese_unit.revealed:
+                        text_on_screen(LEFT_EDGE_X, 245, 'Japanese Unit', 'white', LINE_SIZE)
+                    else:
+                        text_on_screen(LEFT_EDGE_X, 245, f'Japanese Unit: {area.japanese_unit.strategy.capitalize()} - {area.japanese_unit.defense_factor}', 'white', LINE_SIZE)
                     area.japanese_unit.draw(screen)
                 # display american_units
                 if area.american_units:
@@ -266,11 +280,13 @@ def main():
 
             if selected_area and selected_area.contested:
                 if plan_button.rect.collidepoint(pos): 
-                    if not planning_attack:        
-                        text_on_screen(plan_button.rect.x - 5, plan_button.rect.y + 75, 'Plan Attack', 'white', LINE_SIZE)
+                    if not planning_attack: 
+                        if not attacking:        
+                            text_on_screen(plan_button.rect.x - 5, plan_button.rect.y + 75, 'Plan Attack', 'white', LINE_SIZE)
                     else:
                         if lead_attack_unit:
-                            text_on_screen(plan_button.rect.x + 5, plan_button.rect.y + 75, 'Attack!', 'white', LINE_SIZE)
+                            if not attacking:
+                                text_on_screen(plan_button.rect.x + 5, plan_button.rect.y + 75, 'Attack!', 'white', LINE_SIZE)
                         else:
                             text_on_screen(LEFT_EDGE_X, SCREEN_HEIGHT - 30, 'Designate lead attack unit', 'white', LINE_SIZE)
 
@@ -377,7 +393,21 @@ def main():
                             # print(area.identifier)
                             # print(area.japanese_unit.revealed)
                             # defense_value = calculate_defense_value(selected_area, morale)
-                            
+                            if attack_button.rect.collidepoint(pos):
+                                if attacking_units and lead_attack_unit:
+                                    selected_area.japanese_unit.revealed = True
+                                    selected_area.calculate_defense_value(morale)
+                                    planning_attack = False
+                                    attacking = True
+                                    attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
+                                    attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
+                                    # still need to put in:
+                                    #     sniper
+                                    #     ambush
+                                    #     barrage
+                                    # japanese unit no longer strategy available
+                                    # click to release the area, units, lead unit, set units to spent, attack_value to zero, attacking to false
+                                    #     attack_result to none, unhighlight units (may occur with one of the other criteria)
 
 
 
