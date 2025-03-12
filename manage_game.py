@@ -397,8 +397,8 @@ def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_
     if lead_attack_unit:
         attack_value += lead_attack_unit.attack_factor
 
-        for i in range(len(fighting_units) - 1):
-            attack_value += 1
+        attack_value += len(fighting_units) - 1
+            
     # value if lead attack unit not selected
     else:
         attack_value += len(fighting_units)
@@ -478,6 +478,40 @@ def ambush(attacking_units, area, out_of_action_units):
     for unit in attacking_units:
         if unit.attack_lead:
             return remove_from_action(unit, area, out_of_action_units)
+        
+def barrage_press_on(attacking_units, lead_attack_unit, area, out_of_action_units):
+    fighting_units = [unit for unit in attacking_units if unit.unit_type in ('infantry', 'armor')]
+
+    hit_unit = random.choice(fighting_units)
+
+    attacking_units.remove(hit_unit)
+    hit_unit.attacking = False
+    hit_unit.spent = True
+    if hit_unit.attack_lead:
+        hit_unit.attack_lead = False
+        lead_attack_unit = None
+
+    out_of_action_units = remove_from_action(hit_unit, area, out_of_action_units)
+    
+    return attacking_units, out_of_action_units, lead_attack_unit
+
+def barrage_retreat(attacking_units, lead_attack_unit):
+    for unit in attacking_units:
+        unit.spent = True
+        unit.attacking = False
+        if unit.attack_lead:
+            unit.attack_lead = False
+
+    lead_attack_unit = None
+    attacking_units = []
+
+    return attacking_units, lead_attack_unit
+
+
+        
+
+
+
 
 
 

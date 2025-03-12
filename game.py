@@ -106,7 +106,7 @@ def main():
     selected_area = None
     move_from_area = None
     turn_index = 1 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 3 # this will increment at end of every phase and turn over at the end - update manually for now
+    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
     out_of_action_units = []
@@ -116,6 +116,7 @@ def main():
     attack_value = 0
     attacking = False
     barrage = False
+    barrage_retreating = False
     # attack_result = None
     lead_attack_unit = None
     morale_message_4 = None
@@ -152,14 +153,15 @@ def main():
                 if not attacking:
                     plan_button.draw(screen)
                 else:
-                    text_on_screen(LEFT_EDGE_X, 550, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
-                    text_on_screen(LEFT_EDGE_X, 640, f'Defense Value: {selected_area.defense_value}', 'white', HEADER_SIZE)
-                    if not barrage:
-                        text_on_screen(LEFT_EDGE_X, 580, f'Die Roll: {attack_battle_value}', 'white', HEADER_SIZE)
-                        text_on_screen(LEFT_EDGE_X, 610, f'Total Attack Value: {total_attack_value}', 'white', HEADER_SIZE)                   
-                        text_on_screen(LEFT_EDGE_X, 670, f'Die Roll: {defense_battle_value}', 'white', HEADER_SIZE)
-                        text_on_screen(LEFT_EDGE_X, 700, f'Total Defense Value: {total_defense_value}', 'white', HEADER_SIZE)
-                        text_on_screen(LEFT_EDGE_X, 730, f'Attack Result: {attack_result.capitalize()}', 'white', HEADER_SIZE)
+                    if not barrage_retreating:
+                        text_on_screen(LEFT_EDGE_X, 550, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
+                        text_on_screen(LEFT_EDGE_X, 640, f'Defense Value: {selected_area.defense_value}', 'white', HEADER_SIZE)
+                        if not barrage:
+                            text_on_screen(LEFT_EDGE_X, 580, f'Die Roll: {attack_battle_value}', 'white', HEADER_SIZE)
+                            text_on_screen(LEFT_EDGE_X, 610, f'Total Attack Value: {total_attack_value}', 'white', HEADER_SIZE)                   
+                            text_on_screen(LEFT_EDGE_X, 670, f'Die Roll: {defense_battle_value}', 'white', HEADER_SIZE)
+                            text_on_screen(LEFT_EDGE_X, 700, f'Total Defense Value: {total_defense_value}', 'white', HEADER_SIZE)
+                            text_on_screen(LEFT_EDGE_X, 730, f'Attack Result: {attack_result.capitalize()}', 'white', HEADER_SIZE)
                     if barrage:
                         attack_button.draw(screen)                       
                         retreat_button.draw(screen)
@@ -375,22 +377,30 @@ def main():
                         attacking_units = []
                         lead_attack_unit = None
                         attack_value = 0
+                        artillery_support_attack.count = 0
+                        engineer_support_attack.count = 0
                         attack_result = None
                         selected_area = None
                         attacking = False
+                        barrage_retreating = False
 
 
                     if attacking and barrage:
                         if attack_button.rect.collidepoint(pos):
-                            # lose unit
+                            attacking_units, out_of_action_units, lead_attack_unit = barrage_press_on(attacking_units, lead_attack_unit, selected_area, out_of_action_units)
                             selected_area.japanese_unit.strategy_available = False
                             barrage = False
+                            attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
                             attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
                             attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
                         if retreat_button.rect.collidepoint(pos):
-                            # function for retreating and setting to spent does not go through the battle
+                            attacking_units, lead_attack_unit = barrage_retreat(attacking_units, lead_attack_unit)
+                            support_units[0].count += artillery_support_attack.count
+                            support_units[1].count += engineer_support_attack.count
+                            # function for retreating 
                             selected_area.japanese_unit.strategy_available = False
                             barrage = False
+                            barrage_retreating = True
                            
 
 
@@ -557,55 +567,56 @@ def main():
 
 
                 # advancing the game
-                if advance_button.rect.collidepoint(pos):
-                    phase_index, turn_index = advance_game(phase_index, turn_index)
-                    selected_area = None
-                    selected_unit = None
-                    planning_attack = False
+                if not planning_attack and not attacking:
+                    if advance_button.rect.collidepoint(pos):
+                        phase_index, turn_index = advance_game(phase_index, turn_index)
+                        selected_area = None
+                        selected_unit = None
+                        planning_attack = False
 
-                    # DAWN PHASE
-                    if PHASES[phase_index] == 'Dawn':
-                        game_event = None
-                        # mandatory withdrawal
-                        if TURNS[turn_index][0] == 6:
-                            withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=True)
-                        # leader_mortality
-                        mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
-                        update_out_of_action_unit_positions(out_of_action_units)
-                        print(mortality)
-                        # reinforcement check
-                        reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
+                        # DAWN PHASE
+                        if PHASES[phase_index] == 'Dawn':
+                            game_event = None
+                            # mandatory withdrawal
+                            if TURNS[turn_index][0] == 6:
+                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=True)
+                            # leader_mortality
+                            mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
+                            update_out_of_action_unit_positions(out_of_action_units)
+                            print(mortality)
+                            # reinforcement check
+                            reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
 
 
-                    # EVENT PHASE
-                    if PHASES[phase_index] == 'Event':
-                        game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events, map_areas))
+                        # EVENT PHASE
+                        if PHASES[phase_index] == 'Event':
+                            game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events, map_areas))
 
-                        if game_events[-1].type == 'Kembu Group Breakthrough':
-                            withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
-                        elif game_events[-1].type == 'Pause 1st Cavalry':
-                            pause_division(american_units, '1st Cav')
-                        elif game_events[-1].type == 'Pause 37th Division':
-                            pause_division(american_units, '37th Inf')
-                        elif game_events[-1].type == 'Pause 11th Airborne':
-                            pause_division(american_units, '11th Air')
-                        elif game_events[-1].type == 'Shimbu Group Breakthrough':
-                            withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
+                            if game_events[-1].type == 'Kembu Group Breakthrough':
+                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
+                            elif game_events[-1].type == 'Pause 1st Cavalry':
+                                pause_division(american_units, '1st Cav')
+                            elif game_events[-1].type == 'Pause 37th Division':
+                                pause_division(american_units, '37th Inf')
+                            elif game_events[-1].type == 'Pause 11th Airborne':
+                                pause_division(american_units, '11th Air')
+                            elif game_events[-1].type == 'Shimbu Group Breakthrough':
+                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
 
-                    # SUPPLY PHASE
-                    if PHASES[phase_index] == 'Supply':
-                        supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
+                        # SUPPLY PHASE
+                        if PHASES[phase_index] == 'Supply':
+                            supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
 
-                    # COMBAT PHASE
-                    if PHASES[phase_index] == 'Combat':
-                        bloody_streets_areas = [area for area in map_areas if area.contested]
-                        if bloody_streets_areas:
-                            morale_loss, bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units)
-                            morale.adjust_morale(-morale_loss)
-                            print(f'Morale dropped by {morale_loss} points')
-                            if bloody_streets_results:
-                                for result in bloody_streets_results:
-                                    print(result)
+                        # COMBAT PHASE
+                        if PHASES[phase_index] == 'Combat':
+                            bloody_streets_areas = [area for area in map_areas if area.contested]
+                            if bloody_streets_areas:
+                                morale_loss, bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units)
+                                morale.adjust_morale(-morale_loss)
+                                print(f'Morale dropped by {morale_loss} points')
+                                if bloody_streets_results:
+                                    for result in bloody_streets_results:
+                                        print(result)
 
 
 
