@@ -454,12 +454,30 @@ def determine_attack_result(total_attack_value, total_defense_value, area):
         outcome = 'success'
 
     if outcome == 'success' and total_attack_value - total_defense_value > total_defense_value:
-        outcome = 'overrun' 
+        outcome = 'verrun' 
 
     if outcome == 'success' and area.japanese_unit.strategy_available and area.japanese_unit.strategy == 'fanatic':
         outcome = 'stalemate'
     
     return outcome
+
+def sniper(attacking_units, area, out_of_action_units):
+    leaders = [unit for unit in attacking_units if unit.unit_type == 'leader']
+    print(leaders)
+    if leaders:
+        sniper_victim = random.choice(leaders)
+        print(sniper_victim.unit)
+        out_of_action_units = remove_from_action(sniper_victim, area, out_of_action_units)
+    else:
+        out_of_action_units = ambush(attacking_units, area, out_of_action_units)
+
+    return out_of_action_units
+
+def ambush(attacking_units, area, out_of_action_units):
+    print('ran ambush')
+    for unit in attacking_units:
+        if unit.attack_lead:
+            return remove_from_action(unit, area, out_of_action_units)
 
 
 

@@ -27,6 +27,7 @@ clock = pygame.time.Clock()
 advance_button = Button(1450, 10, 'arrow.png')
 plan_button = Button(1450, 100, 'plan_attack.png')
 attack_button = Button(1450, 100, 'attack.png')
+retreat_button = Button(1450, 195, 'white_flag.png')
 american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units()
 legend_control_marker = create_control_marker(32, 695)
 morale = create_morale()
@@ -114,6 +115,7 @@ def main():
     attacking_units = []
     attack_value = 0
     attacking = False
+    barrage = False
     # attack_result = None
     lead_attack_unit = None
     morale_message_4 = None
@@ -151,12 +153,17 @@ def main():
                     plan_button.draw(screen)
                 else:
                     text_on_screen(LEFT_EDGE_X, 550, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
-                    text_on_screen(LEFT_EDGE_X, 580, f'Die Roll: {attack_battle_value}', 'white', HEADER_SIZE)
-                    text_on_screen(LEFT_EDGE_X, 610, f'Total Attack Value: {total_attack_value}', 'white', HEADER_SIZE)
                     text_on_screen(LEFT_EDGE_X, 640, f'Defense Value: {selected_area.defense_value}', 'white', HEADER_SIZE)
-                    text_on_screen(LEFT_EDGE_X, 670, f'Die Roll: {defense_battle_value}', 'white', HEADER_SIZE)
-                    text_on_screen(LEFT_EDGE_X, 700, f'Total Defense Value: {total_defense_value}', 'white', HEADER_SIZE)
-                    text_on_screen(LEFT_EDGE_X, 730, f'Attack Result: {attack_result.capitalize()}', 'white', HEADER_SIZE)
+                    if not barrage:
+                        text_on_screen(LEFT_EDGE_X, 580, f'Die Roll: {attack_battle_value}', 'white', HEADER_SIZE)
+                        text_on_screen(LEFT_EDGE_X, 610, f'Total Attack Value: {total_attack_value}', 'white', HEADER_SIZE)                   
+                        text_on_screen(LEFT_EDGE_X, 670, f'Die Roll: {defense_battle_value}', 'white', HEADER_SIZE)
+                        text_on_screen(LEFT_EDGE_X, 700, f'Total Defense Value: {total_defense_value}', 'white', HEADER_SIZE)
+                        text_on_screen(LEFT_EDGE_X, 730, f'Attack Result: {attack_result.capitalize()}', 'white', HEADER_SIZE)
+                    if barrage:
+                        attack_button.draw(screen)                       
+                        retreat_button.draw(screen)
+
             else:
                 attack_button.draw(screen)
                 text_on_screen(LEFT_EDGE_X, 550, 'Request Support', 'white', HEADER_SIZE)
@@ -283,12 +290,17 @@ def main():
                     if not planning_attack: 
                         if not attacking:        
                             text_on_screen(plan_button.rect.x - 5, plan_button.rect.y + 75, 'Plan Attack', 'white', LINE_SIZE)
+                        if attacking and barrage:
+                            text_on_screen(plan_button.rect.x + 5, plan_button.rect.y + 75, 'Push On!', 'white', LINE_SIZE)
                     else:
                         if lead_attack_unit:
                             if not attacking:
                                 text_on_screen(plan_button.rect.x + 5, plan_button.rect.y + 75, 'Attack!', 'white', LINE_SIZE)
                         else:
                             text_on_screen(LEFT_EDGE_X, SCREEN_HEIGHT - 30, 'Designate lead attack unit', 'white', LINE_SIZE)
+                if barrage:
+                    if retreat_button.rect.collidepoint(pos)                    :
+                        text_on_screen(retreat_button.rect.x + 5, retreat_button.rect.y + 75, 'Retreat', 'white', LINE_SIZE)
 
             # mandatory withdrawal
             # units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
@@ -317,7 +329,7 @@ def main():
                 # modify this after moving cuz will be easier to move units around then
                 # get unit selected for moving to stay on the screen
                 if PHASES[phase_index] == 'Combat':
-                    if not planning_attack:
+                    if not planning_attack and not attacking:
                     # movement
                         for area in map_areas:
                             if area.rect.collidepoint(pos):
@@ -325,8 +337,11 @@ def main():
                                     if area == selected_area:
                                         selected_area = None
                                     elif selected_area == None and area.american_units:
-                                        selected_area = area
-                                        move_from_area = area
+                                        for unit in area.american_units: # only select if area has a fresh unit
+                                            if not unit.spent:
+                                                selected_area = area
+                                                move_from_area = area
+                                                break
                                 if selected_unit:
                                     movement_cost, stop_required = calculate_movement_cost(area, map_areas)
                                     message = move_unit(selected_unit, move_from_area, area, movement_cost, stop_required)
@@ -351,29 +366,49 @@ def main():
 
 
                     # attacking
-                    if attacking: # clear everything after attack
+                    if attacking and not barrage: # clear everything after attack
                         selected_area.japanese_unit.strategy_available = False
                         for unit in attacking_units:
                             unit.attacking = False
                             unit.attack_lead = False
                             unit.spent = True
                         attacking_units = []
+                        lead_attack_unit = None
                         attack_value = 0
                         attack_result = None
                         selected_area = None
                         attacking = False
 
 
+                    if attacking and barrage:
+                        if attack_button.rect.collidepoint(pos):
+                            # lose unit
+                            selected_area.japanese_unit.strategy_available = False
+                            barrage = False
+                            attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
+                            attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
+                        if retreat_button.rect.collidepoint(pos):
+                            # function for retreating and setting to spent does not go through the battle
+                            selected_area.japanese_unit.strategy_available = False
+                            barrage = False
+                           
+
+
+                        # attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
+                        # attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
+
+
                     if selected_area and selected_area.contested:
                         if not planning_attack:
-                            if plan_button.rect.collidepoint(pos):
-                                planning_attack = True
+                            if not attacking:
+                                if plan_button.rect.collidepoint(pos):
+                                    planning_attack = True
                                 # attacking_units = []
 
                         else:
                             for unit in selected_area.american_units:
                                 if unit.rect.collidepoint(pos):
-                                    if not unit.paused: # deal with paused and spent units (spent units also can't move)
+                                    if not unit.paused and not unit.spent: # deal with paused and spent units (spent units also can't move)
                                         if not unit.attacking: # puts unit in attack
                                             attacking_units.append(unit)
                                             unit.attacking = True
@@ -412,11 +447,20 @@ def main():
                                     selected_area.calculate_defense_value(morale)
                                     planning_attack = False
                                     attacking = True
-                                    attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
-                                    attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
+                                    if selected_area.japanese_unit.strategy_available and selected_area.japanese_unit.strategy == 'barrage':
+                                        barrage = True
+                                    if not barrage:
+                                        attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
+                                        attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
+                                        print(selected_area.japanese_unit.strategy_available)
+                                        print(selected_area.japanese_unit.strategy)
+                                        if selected_area.japanese_unit.strategy_available:
+                                            if selected_area.japanese_unit.strategy == 'sniper':
+                                                out_of_action_units = sniper(attacking_units, selected_area, out_of_action_units)
+                                            if selected_area.japanese_unit.strategy == 'ambush':
+                                                out_of_action_units = ambush(attacking_units, selected_area, out_of_action_units)
+
                                     # still need to put in:
-                                    #     sniper
-                                    #     ambush
                                     #     barrage
 
 
