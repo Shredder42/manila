@@ -2,7 +2,7 @@ import os
 import pygame
 import random
 from constants import *
-from pieces import AmericanUnit, JapaneseUnit, SupportUnit, create_units, create_morale, create_control_marker, create_supply, create_events
+from pieces import AmericanUnit, JapaneseUnit, SupportUnit, create_units, create_morale, create_control, create_supply, create_events
 from game_board import MapArea, create_map
 from manage_game import *
 
@@ -29,7 +29,7 @@ plan_button = Button(1450, 100, 'plan_attack.png')
 attack_button = Button(1450, 100, 'attack.png')
 retreat_button = Button(1450, 195, 'white_flag.png')
 american_units, japanese_units_clear, japanese_units_fort, japanese_units_urban, support_units = create_units()
-legend_control_marker = create_control_marker(32, 695)
+control = create_control(32, 695)
 morale = create_morale()
 supply = create_supply()
 potential_events, potential_event_weights = create_events()
@@ -107,7 +107,7 @@ def main():
     move_from_area = None
     turn_index = 1 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
-    areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
+    # areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
     out_of_action_units = []
     game_events = []
@@ -134,12 +134,12 @@ def main():
             for unit in out_of_action_units:
                 unit.draw(screen)
         advance_button.draw(screen)
-        legend_control_marker.draw(screen)
+        control.draw(screen)
         for support_unit in support_units:
             support_unit.draw(screen)
         morale.draw(screen)
         supply.draw(screen)
-        text_on_screen(90, 710, str(areas_controlled), 'black', COUNTER_SIZE)
+        text_on_screen(90, 710, str(control.count), 'black', COUNTER_SIZE)
         text_on_screen(90, 770, str(morale.count), 'black', COUNTER_SIZE)
         text_on_screen(90, 830, str(support_units[0].count), 'black', COUNTER_SIZE)
         text_on_screen(90, 890, str(support_units[1].count), 'black', COUNTER_SIZE)
@@ -148,10 +148,11 @@ def main():
             unit.draw(screen)
         if game_events and PHASES[phase_index] != 'Dawn':
             game_events[-1].draw(screen)
-        if PHASES[phase_index] == 'Combat' and selected_area and selected_area.contested:
+        if PHASES[phase_index] == 'Combat' and selected_area: # and selected_area.contested:
             if not planning_attack:
                 if not attacking:
-                    plan_button.draw(screen)
+                    if selected_area.contested:
+                        plan_button.draw(screen)
                 else:
                     if not barrage_retreating:
                         text_on_screen(LEFT_EDGE_X, 550, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
@@ -180,7 +181,8 @@ def main():
 
 
         if advance_button.rect.collidepoint(pos):
-            text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
+            if not planning_attack and not attacking:
+                text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
         # testing - remove
         # test_unit1.draw(screen)
         # test_unit2.draw(screen)
@@ -209,7 +211,10 @@ def main():
                     if not area.japanese_unit.revealed:
                         text_on_screen(LEFT_EDGE_X, 245, 'Japanese Unit', 'white', LINE_SIZE)
                     else:
-                        text_on_screen(LEFT_EDGE_X, 245, f'Japanese Unit: {area.japanese_unit.strategy.capitalize()} - {area.japanese_unit.defense_factor}', 'white', LINE_SIZE)
+                        if area.japanese_unit.strategy_available:
+                            text_on_screen(LEFT_EDGE_X, 245, f'Japanese Unit: {area.japanese_unit.strategy.capitalize()} - {area.japanese_unit.defense_factor}', 'white', LINE_SIZE)
+                        else:
+                            text_on_screen(LEFT_EDGE_X, 245, f'Japanese Unit: {area.japanese_unit.defense_factor}', 'white', LINE_SIZE)
                     area.japanese_unit.draw(screen)
                 # display american_units
                 if area.american_units:
@@ -219,7 +224,7 @@ def main():
                             highlight_unit(unit, screen)
                         unit.draw(screen)
 
-        if legend_control_marker.rect.collidepoint(pos):
+        if control.rect.collidepoint(pos):
             control_message_1 = 'Automatic Victory if every Area is American controlled'
             control_message_2 = 'Operational Victory if Americans control:'
             text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, f'Areas controlled by American Forces', 'white', HEADER_SIZE)
@@ -369,11 +374,12 @@ def main():
 
                     # attacking
                     if attacking and not barrage: # clear everything after attack
-                        selected_area.japanese_unit.strategy_available = False
-                        for unit in attacking_units:
-                            unit.attacking = False
-                            unit.attack_lead = False
-                            unit.spent = True
+                        if selected_area.japanese_unit:
+                            selected_area.japanese_unit.strategy_available = False
+                        # for unit in attacking_units:
+                        #     unit.attacking = False
+                        #     unit.attack_lead = False
+                            # unit.spent = True
                         attacking_units = []
                         lead_attack_unit = None
                         attack_value = 0
@@ -393,6 +399,7 @@ def main():
                             attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
                             attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
                             attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
+                            out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control, False)
                         if retreat_button.rect.collidepoint(pos):
                             attacking_units, lead_attack_unit = barrage_retreat(attacking_units, lead_attack_unit)
                             support_units[0].count += artillery_support_attack.count
@@ -433,8 +440,10 @@ def main():
                                                 unit.attacking = False
                                                 unit.attack_lead = False
                                                 lead_attack_unit = None
+                                        attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
                                     else:
                                         print('Unit is paused and may not attack')
+
 
                             if artillery_support_attack.count + engineer_support_attack.count < len(attacking_units): # support limit 9.5.4
                                 if artillery_support_attack.rect.collidepoint(pos):
@@ -445,7 +454,7 @@ def main():
                                 if engineer_support_attack.rect.collidepoint(pos):
                                     request_support(engineer_support_attack, support_units)
 
-                            attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
+                                    attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
                             # selected_area.japanese_unit.revealed = True
                             selected_area.calculate_defense_value(morale) # have this run whenever the japanese unit gets revealed like the line above
                             # print(area.identifier)
@@ -462,16 +471,16 @@ def main():
                                     if not barrage:
                                         attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
                                         attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
-                                        print(selected_area.japanese_unit.strategy_available)
+                                        print(attack_result)
+                                        # print(selected_area.japanese_unit.strategy_available)
                                         print(selected_area.japanese_unit.strategy)
                                         if selected_area.japanese_unit.strategy_available:
                                             if selected_area.japanese_unit.strategy == 'sniper':
                                                 out_of_action_units = sniper(attacking_units, selected_area, out_of_action_units)
                                             if selected_area.japanese_unit.strategy == 'ambush':
                                                 out_of_action_units = ambush(attacking_units, selected_area, out_of_action_units)
-
-                                    # still need to put in:
-                                    #     barrage
+                                        out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control, False)
+                        
 
 
                             

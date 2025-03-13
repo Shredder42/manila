@@ -34,7 +34,7 @@ class MapArea:
                 unit.rect.y = 490
 
     def add_unit_to_area(self, unit):
-        if self.stack_count and (self.stack_count == self.stack_limit) and unit.type in STACKING_UNIT_TYPES:
+        if self.stack_count and (self.stack_count == self.stack_limit) and unit.unit_type in STACKING_UNIT_TYPES:
             return 'Area at Stacking Limit'
         else:
             self.american_units.append(unit)

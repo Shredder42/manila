@@ -453,8 +453,8 @@ def determine_attack_result(total_attack_value, total_defense_value, area):
     else:
         outcome = 'success'
 
-    if outcome == 'success' and total_attack_value - total_defense_value > total_defense_value:
-        outcome = 'verrun' 
+    if outcome == 'success' and total_attack_value - total_defense_value > total_defense_value and not area.terrain == 'fort':
+        outcome = 'overrun' 
 
     if outcome == 'success' and area.japanese_unit.strategy_available and area.japanese_unit.strategy == 'fanatic':
         outcome = 'stalemate'
@@ -480,6 +480,7 @@ def ambush(attacking_units, area, out_of_action_units):
             return remove_from_action(unit, area, out_of_action_units)
         
 def barrage_press_on(attacking_units, lead_attack_unit, area, out_of_action_units):
+    # may want to make it only take a random non lead unit (otherwise might to too punishing to press on)
     fighting_units = [unit for unit in attacking_units if unit.unit_type in ('infantry', 'armor')]
 
     hit_unit = random.choice(fighting_units)
@@ -506,6 +507,32 @@ def barrage_retreat(attacking_units, lead_attack_unit):
     attacking_units = []
 
     return attacking_units, lead_attack_unit
+
+
+def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_units, morale, control, mandatory):
+    for unit in attacking_units:
+        unit.attacking = False
+        if attack_result in ('repulse', 'stalemate', 'success'):
+            unit.spent = True
+        if unit.attack_lead:
+            unit.attack_lead = False
+            if attack_result == 'repulse':
+                out_of_action_units = remove_from_action(unit, area, out_of_action_units)
+
+    if attack_result in ('success', 'overrun'):
+        area.japanese_unit = None
+        area.control = 'American'
+        control.count += 1
+        if area.identifier in (22, 31, 34, 37): # captured area morale bonus (9.5.8)
+            morale.adjust_morale(1)
+
+    if attack_result == 'repulse':
+        morale.adjust_morale(-1)
+        if mandatory:
+            #retreat
+            pass
+
+    return out_of_action_units
 
 
         

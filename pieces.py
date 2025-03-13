@@ -177,10 +177,11 @@ class Morale:
         else:
             self.shaken = False
 
-class ControlMarker:
+class Control:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.count = 3
         self.filepath = './images/control_front.png'
         self.image = self.__load_image()
         self.rect = self.image.get_rect()
@@ -371,8 +372,8 @@ def create_units():
 def create_morale():
     return Morale()
 
-def create_control_marker(x, y):
-    return ControlMarker(x, y)
+def create_control(x, y):
+    return Control(x, y)
 
 def create_supply():
     return Supply()
