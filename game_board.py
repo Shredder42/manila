@@ -18,6 +18,7 @@ class MapArea:
         self.american_units = []
         self.japanese_unit = None # maybe a funtion to randomly pick the unit (this is currently in game.py)
         self.defense_value = '?'
+        self.mandatory_attack = True
 
     def __update_american_unit_positions(self):
         '''

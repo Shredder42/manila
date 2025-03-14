@@ -308,6 +308,11 @@ def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
             if not message:
                 unit.deduct_movement_cost(movement_cost, stop_required)
                 move_from_area.remove_unit_from_area(unit)
+
+                if move_to_area.japanese_unit:
+                    move_to_area.contested = True
+                if not move_to_area.american_units or not move_from_area.japanese_unit:
+                    move_from_area.contested = False
         else:
             message = 'Not enough movement factor'
     else:
@@ -376,7 +381,7 @@ def request_support(support_unit_attack, support_units):
         support_unit_attack.add_support_unit()
         support_units[support_unit_index].use_support_unit()
 
-def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, event, area, mandatory):
+def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, event, area):
     attack_value = 0
 
     infantry_unit = False
@@ -427,7 +432,7 @@ def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_
     if not morale.shaken:
         attack_value += 1
     # event
-    if mandatory and event.type == 'Civilians and Refugees':
+    if area.mandatory_attack and event.type == 'Civilians and Refugees':
         attack_value -= 1
 
     return attack_value
@@ -509,7 +514,7 @@ def barrage_retreat(attacking_units, lead_attack_unit):
     return attacking_units, lead_attack_unit
 
 
-def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_units, morale, control, mandatory):
+def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_units, morale, control):
     for unit in attacking_units:
         unit.attacking = False
         if attack_result in ('repulse', 'stalemate', 'success'):
@@ -522,13 +527,14 @@ def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_uni
     if attack_result in ('success', 'overrun'):
         area.japanese_unit = None
         area.control = 'American'
+        area.contested = False
         control.count += 1
         if area.identifier in (22, 31, 34, 37): # captured area morale bonus (9.5.8)
             morale.adjust_morale(1)
 
     if attack_result == 'repulse':
         morale.adjust_morale(-1)
-        if mandatory:
+        if area.mandatory_attack:
             #retreat
             pass
 

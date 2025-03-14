@@ -111,6 +111,7 @@ def main():
     reinforcement_units = []
     out_of_action_units = []
     game_events = []
+    mandatory_attacks = set()
     planning_attack = False
     attacking_units = []
     attack_value = 0
@@ -129,7 +130,8 @@ def main():
         text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', COUNTER_SIZE)
         text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', COUNTER_SIZE)
         text_on_screen(LEFT_EDGE_X, 90, f'Event:', 'white', COUNTER_SIZE)
-        if PHASES[phase_index] != 'Combat':
+        # if PHASES[phase_index] != 'Combat':
+        if not planning_attack and not attacking and not barrage:
             text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', COUNTER_SIZE)
             for unit in out_of_action_units:
                 unit.draw(screen)
@@ -182,7 +184,10 @@ def main():
 
         if advance_button.rect.collidepoint(pos):
             if not planning_attack and not attacking:
-                text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
+                if mandatory_attacks:
+                    text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Mandatory Attacks remaining', 'white', LINE_SIZE)
+                else:
+                    text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
         # testing - remove
         # test_unit1.draw(screen)
         # test_unit2.draw(screen)
@@ -190,10 +195,10 @@ def main():
 
 
         for area in map_areas:
-            if area.japanese_unit and area.american_units:
-                area.contested = True
-            else:
-                area.contested = False
+        #     if area.japanese_unit and area.american_units:
+        #         area.contested = True
+        #     else:
+        #         area.contested = False
 
             if (area.rect.collidepoint(pos) and not selected_area) or (PHASES[phase_index] == 'Combat' and selected_area == area):
                 # make everything below it's own function probably
@@ -203,7 +208,10 @@ def main():
                 if area.terrain:
                     text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'{area.terrain.capitalize()} terrain: +{area.terrain_effect_modifier} TEM', 'white', LINE_SIZE)
                 if area.contested:
-                    text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, 'Area Contested!', 'red', LINE_SIZE)                    
+                    if area.mandatory_attack:
+                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, 'Area Contested! - MANDATORY ATTACK', 'red', LINE_SIZE)
+                    else:
+                        text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, 'Area Contested!', 'red', LINE_SIZE)                    
 
             
                 # display japanese_unit
@@ -329,6 +337,59 @@ def main():
                 print(pos)
 
 
+                # advancing the game
+                if not mandatory_attacks and not planning_attack and not attacking:
+                    if advance_button.rect.collidepoint(pos):
+                        phase_index, turn_index = advance_game(phase_index, turn_index)
+                        selected_area = None
+                        selected_unit = None
+                        planning_attack = False
+
+                        # DAWN PHASE
+                        if PHASES[phase_index] == 'Dawn':
+                            game_event = None
+                            # mandatory withdrawal
+                            if TURNS[turn_index][0] == 6:
+                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=True)
+                            # leader_mortality
+                            mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
+                            update_out_of_action_unit_positions(out_of_action_units)
+                            print(mortality)
+                            # reinforcement check
+                            reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
+
+
+                        # EVENT PHASE
+                        if PHASES[phase_index] == 'Event':
+                            game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events, map_areas))
+
+                            if game_events[-1].type == 'Kembu Group Breakthrough':
+                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
+                            elif game_events[-1].type == 'Pause 1st Cavalry':
+                                pause_division(american_units, '1st Cav')
+                            elif game_events[-1].type == 'Pause 37th Division':
+                                pause_division(american_units, '37th Inf')
+                            elif game_events[-1].type == 'Pause 11th Airborne':
+                                pause_division(american_units, '11th Air')
+                            elif game_events[-1].type == 'Shimbu Group Breakthrough':
+                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
+
+                        # SUPPLY PHASE
+                        if PHASES[phase_index] == 'Supply':
+                            supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
+
+                        # COMBAT PHASE
+                        if PHASES[phase_index] == 'Combat':
+                            bloody_streets_areas = [area for area in map_areas if area.contested]
+                            if bloody_streets_areas:
+                                morale_loss, bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units)
+                                morale.adjust_morale(-morale_loss)
+                                print(f'Morale dropped by {morale_loss} points')
+                                if bloody_streets_results:
+                                    for result in bloody_streets_results:
+                                        print(result)
+
+
                 # COMBAT
                 # may want to rework this entire section to be more efficient
                     # only select area once (and only if contains fresh american units)
@@ -355,9 +416,14 @@ def main():
                                     if message:
                                         selected_unit.rect.x = previous_rect_x
                                         selected_unit.rect.y = previous_rect_y
+                                    # if area.japanese_unit and area.american_units:
+                                    #     area.contested = True
+                                    if area.mandatory_attack and area.contested:
+                                        mandatory_attacks.add(area)
                                     move_from_area = None
                                     selected_unit = None
                                     print(message)
+                                    print(mandatory_attacks)
 
 
                         # show selected unit (probs where the reinforcement_units normally show)
@@ -373,8 +439,14 @@ def main():
 
 
                     # attacking
-                    if attacking and not barrage: # clear everything after attack
-                        if selected_area.japanese_unit:
+                    if attacking and not barrage: 
+                        if selected_area.japanese_unit.strategy_available:
+                            if selected_area.japanese_unit.strategy == 'sniper':
+                                out_of_action_units = sniper(attacking_units, selected_area, out_of_action_units)
+                            if selected_area.japanese_unit.strategy == 'ambush':
+                                out_of_action_units = ambush(attacking_units, selected_area, out_of_action_units)
+                        out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
+                        if selected_area.japanese_unit: # clear everything after attack
                             selected_area.japanese_unit.strategy_available = False
                         # for unit in attacking_units:
                         #     unit.attacking = False
@@ -386,6 +458,9 @@ def main():
                         artillery_support_attack.count = 0
                         engineer_support_attack.count = 0
                         attack_result = None
+                        selected_area.mandatory_attack = False
+                        if selected_area in mandatory_attacks:
+                            mandatory_attacks.remove(selected_area)
                         selected_area = None
                         attacking = False
                         barrage_retreating = False
@@ -396,10 +471,10 @@ def main():
                             attacking_units, out_of_action_units, lead_attack_unit = barrage_press_on(attacking_units, lead_attack_unit, selected_area, out_of_action_units)
                             selected_area.japanese_unit.strategy_available = False
                             barrage = False
-                            attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
+                            attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
                             attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
                             attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
-                            out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control, False)
+                            out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
                         if retreat_button.rect.collidepoint(pos):
                             attacking_units, lead_attack_unit = barrage_retreat(attacking_units, lead_attack_unit)
                             support_units[0].count += artillery_support_attack.count
@@ -440,7 +515,7 @@ def main():
                                                 unit.attacking = False
                                                 unit.attack_lead = False
                                                 lead_attack_unit = None
-                                        attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
+                                        attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
                                     else:
                                         print('Unit is paused and may not attack')
 
@@ -453,8 +528,7 @@ def main():
                                         print('More than 1 Artillery Support not allowed')
                                 if engineer_support_attack.rect.collidepoint(pos):
                                     request_support(engineer_support_attack, support_units)
-
-                                    attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events, selected_area, False)
+                                    attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
                             # selected_area.japanese_unit.revealed = True
                             selected_area.calculate_defense_value(morale) # have this run whenever the japanese unit gets revealed like the line above
                             # print(area.identifier)
@@ -474,12 +548,12 @@ def main():
                                         print(attack_result)
                                         # print(selected_area.japanese_unit.strategy_available)
                                         print(selected_area.japanese_unit.strategy)
-                                        if selected_area.japanese_unit.strategy_available:
-                                            if selected_area.japanese_unit.strategy == 'sniper':
-                                                out_of_action_units = sniper(attacking_units, selected_area, out_of_action_units)
-                                            if selected_area.japanese_unit.strategy == 'ambush':
-                                                out_of_action_units = ambush(attacking_units, selected_area, out_of_action_units)
-                                        out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control, False)
+                                        # if selected_area.japanese_unit.strategy_available:
+                                            # if selected_area.japanese_unit.strategy == 'sniper':
+                                            #     out_of_action_units = sniper(attacking_units, selected_area, out_of_action_units)
+                                            # if selected_area.japanese_unit.strategy == 'ambush':
+                                            #     out_of_action_units = ambush(attacking_units, selected_area, out_of_action_units)
+                                        # out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control, False)
                         
 
 
@@ -575,57 +649,6 @@ def main():
                     # print(f'selected unit {selected_unit}')                                              
 
 
-                # advancing the game
-                if not planning_attack and not attacking:
-                    if advance_button.rect.collidepoint(pos):
-                        phase_index, turn_index = advance_game(phase_index, turn_index)
-                        selected_area = None
-                        selected_unit = None
-                        planning_attack = False
-
-                        # DAWN PHASE
-                        if PHASES[phase_index] == 'Dawn':
-                            game_event = None
-                            # mandatory withdrawal
-                            if TURNS[turn_index][0] == 6:
-                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=True)
-                            # leader_mortality
-                            mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
-                            update_out_of_action_unit_positions(out_of_action_units)
-                            print(mortality)
-                            # reinforcement check
-                            reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
-
-
-                        # EVENT PHASE
-                        if PHASES[phase_index] == 'Event':
-                            game_events.append(determine_game_event(potential_events, potential_event_weights, TURNS[turn_index][0], game_events, map_areas))
-
-                            if game_events[-1].type == 'Kembu Group Breakthrough':
-                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
-                            elif game_events[-1].type == 'Pause 1st Cavalry':
-                                pause_division(american_units, '1st Cav')
-                            elif game_events[-1].type == 'Pause 37th Division':
-                                pause_division(american_units, '37th Inf')
-                            elif game_events[-1].type == 'Pause 11th Airborne':
-                                pause_division(american_units, '11th Air')
-                            elif game_events[-1].type == 'Shimbu Group Breakthrough':
-                                withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
-
-                        # SUPPLY PHASE
-                        if PHASES[phase_index] == 'Supply':
-                            supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
-
-                        # COMBAT PHASE
-                        if PHASES[phase_index] == 'Combat':
-                            bloody_streets_areas = [area for area in map_areas if area.contested]
-                            if bloody_streets_areas:
-                                morale_loss, bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units)
-                                morale.adjust_morale(-morale_loss)
-                                print(f'Morale dropped by {morale_loss} points')
-                                if bloody_streets_results:
-                                    for result in bloody_streets_results:
-                                        print(result)
 
 
 
