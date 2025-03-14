@@ -321,7 +321,7 @@ def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
     return message
 
 def bloody_streets_roll(area):
-    roll = random.randint(1, 6)
+    roll = roll_dice(1)
     if area.japanese_unit.strategy == 'elite':
         roll += 1
 
@@ -472,30 +472,33 @@ def sniper(attacking_units, area, out_of_action_units):
     if leaders:
         sniper_victim = random.choice(leaders)
         print(sniper_victim.unit)
+        sniper_victim.spent = True
         out_of_action_units = remove_from_action(sniper_victim, area, out_of_action_units)
     else:
-        out_of_action_units = ambush(attacking_units, area, out_of_action_units)
+        out_of_action_units, attacking_units = ambush(attacking_units, area, out_of_action_units)
 
-    return out_of_action_units
+    return out_of_action_units, attacking_units
 
 def ambush(attacking_units, area, out_of_action_units):
     print('ran ambush')
-    for unit in attacking_units:
+    for unit in attacking_units[:]:
         if unit.attack_lead:
-            return remove_from_action(unit, area, out_of_action_units)
+            unit.spent = True
+            attacking_units.remove(unit)
+            return remove_from_action(unit, area, out_of_action_units), attacking_units
         
 def barrage_press_on(attacking_units, lead_attack_unit, area, out_of_action_units):
-    # may want to make it only take a random non lead unit (otherwise might to too punishing to press on)
-    fighting_units = [unit for unit in attacking_units if unit.unit_type in ('infantry', 'armor')]
+    fighting_units = [unit for unit in attacking_units if unit.unit_type in ('infantry', 'armor') and not unit.attack_lead]
 
-    hit_unit = random.choice(fighting_units)
+    if fighting_units:
+        hit_unit = random.choice(fighting_units)
 
-    attacking_units.remove(hit_unit)
-    hit_unit.attacking = False
-    hit_unit.spent = True
-    if hit_unit.attack_lead:
-        hit_unit.attack_lead = False
-        lead_attack_unit = None
+        attacking_units.remove(hit_unit)
+        hit_unit.attacking = False
+        hit_unit.spent = True
+        # if hit_unit.attack_lead:
+        #     hit_unit.attack_lead = False
+        #     lead_attack_unit = None
 
     out_of_action_units = remove_from_action(hit_unit, area, out_of_action_units)
     

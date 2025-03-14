@@ -442,9 +442,9 @@ def main():
                     if attacking and not barrage: 
                         if selected_area.japanese_unit.strategy_available:
                             if selected_area.japanese_unit.strategy == 'sniper':
-                                out_of_action_units = sniper(attacking_units, selected_area, out_of_action_units)
+                                out_of_action_units, attacking_units = sniper(attacking_units, selected_area, out_of_action_units)
                             if selected_area.japanese_unit.strategy == 'ambush':
-                                out_of_action_units = ambush(attacking_units, selected_area, out_of_action_units)
+                                out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
                         out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
                         if selected_area.japanese_unit: # clear everything after attack
                             selected_area.japanese_unit.strategy_available = False
