@@ -308,6 +308,7 @@ def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
             if not message:
                 unit.deduct_movement_cost(movement_cost, stop_required)
                 move_from_area.remove_unit_from_area(unit)
+                unit.previous_area = move_from_area
 
                 if move_to_area.japanese_unit:
                     move_to_area.contested = True
@@ -537,11 +538,27 @@ def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_uni
 
     if attack_result == 'repulse':
         morale.adjust_morale(-1)
-        if area.mandatory_attack:
-            #retreat
-            pass
+
 
     return out_of_action_units
+
+def retreat(unit, area, retreating_units):
+    # selected_area might not be the best - have to look at   
+    message = unit.previous_area.add_unit_to_area(unit)
+    if not message:
+        area.remove_unit_from_area(unit)
+        retreating_units.remove(unit)
+    return retreating_units
+
+# def retreat_stacked(unit, area, selected_area):
+#     if selected_area.identifier in unit.previous_area.adjacent_areas and selected_area.control == 'American' and area != selected_area:
+#         message = unit.selected_area.add_unit_to_area(unit)
+#         if not message:
+#             area.remove_unit_from_area(unit)
+#         else:
+#             return message
+        
+
 
 
         

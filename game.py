@@ -120,6 +120,7 @@ def main():
     barrage_retreating = False
     # attack_result = None
     lead_attack_unit = None
+    retreating_units = []
     morale_message_4 = None
 
     
@@ -195,10 +196,10 @@ def main():
 
 
         for area in map_areas:
-        #     if area.japanese_unit and area.american_units:
-        #         area.contested = True
-        #     else:
-        #         area.contested = False
+            if area.japanese_unit and area.american_units:
+                area.contested = True
+            else:
+                area.contested = False
 
             if (area.rect.collidepoint(pos) and not selected_area) or (PHASES[phase_index] == 'Combat' and selected_area == area):
                 # make everything below it's own function probably
@@ -439,13 +440,24 @@ def main():
 
 
                     # attacking
-                    if attacking and not barrage: 
-                        if selected_area.japanese_unit.strategy_available:
-                            if selected_area.japanese_unit.strategy == 'sniper':
-                                out_of_action_units, attacking_units = sniper(attacking_units, selected_area, out_of_action_units)
-                            if selected_area.japanese_unit.strategy == 'ambush':
-                                out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
-                        out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
+                    if retreating_units:
+                        for unit in retreating_units:
+                            if unit.rect.collidepoint(pos):
+                                retreating_units = retreat(unit, selected_area, retreating_units)
+                                # if retreat_stacked:
+
+
+
+
+
+                    if attacking and not barrage and not retreating_units: 
+                        # if selected_area.japanese_unit.strategy_available:
+                        #     if selected_area.japanese_unit.strategy == 'sniper':
+                        #         out_of_action_units, attacking_units = sniper(attacking_units, selected_area, out_of_action_units)
+                        #     if selected_area.japanese_unit.strategy == 'ambush':
+                        #         out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
+                        if attack_result:
+                            out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
                         if selected_area.japanese_unit: # clear everything after attack
                             selected_area.japanese_unit.strategy_available = False
                         # for unit in attacking_units:
@@ -516,6 +528,7 @@ def main():
                                                 unit.attack_lead = False
                                                 lead_attack_unit = None
                                         attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
+
                                     else:
                                         print('Unit is paused and may not attack')
 
@@ -548,11 +561,17 @@ def main():
                                         print(attack_result)
                                         # print(selected_area.japanese_unit.strategy_available)
                                         print(selected_area.japanese_unit.strategy)
-                                        # if selected_area.japanese_unit.strategy_available:
-                                            # if selected_area.japanese_unit.strategy == 'sniper':
-                                            #     out_of_action_units = sniper(attacking_units, selected_area, out_of_action_units)
-                                            # if selected_area.japanese_unit.strategy == 'ambush':
-                                            #     out_of_action_units = ambush(attacking_units, selected_area, out_of_action_units)
+                                        if selected_area.japanese_unit.strategy_available:
+                                            if selected_area.japanese_unit.strategy == 'sniper':
+                                                out_of_action_units, attacking_units = sniper(attacking_units, selected_area, out_of_action_units)
+                                            if selected_area.japanese_unit.strategy == 'ambush':
+                                                out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
+                                        if attack_result == 'repulse' and selected_area.mandatory_attack:
+                                            retreating_units = [unit for unit in attacking_units if not unit.attack_lead]
+                                            # for unit in retreating_units:
+                                            #     print(unit.unit)
+                                        # print(retreating_units)
+                                                # print(out_of_action_units)
                                         # out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control, False)
                         
 
