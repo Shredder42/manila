@@ -222,13 +222,13 @@ def determine_game_event(potential_events, potential_event_weights, turn, game_e
         if game_events:
             if new_event == game_events[-1]:
                 new_event = potential_events[9]
-
+    # put this back in after testing
     if new_event == potential_events[6]:
         for area in map_areas:
             if area.control == 'American' and area.terrain in ('urban', 'fort'):
-                breakout = random.choices(['breakout', 'no breakout'], [0.33, 0.67])[0]
-                if breakout == 'no breakout':
-                    new_event = potential_events[9]
+    #             # breakout = random.choices(['breakout', 'no breakout'], [0.33, 0.67])[0]
+    #             # if breakout == 'no breakout':
+    #             #     new_event = potential_events[9]
                 break
         else:
             new_event = potential_events[9]
@@ -270,6 +270,22 @@ def pause_division(american_units, division):
     for unit in american_units:
         if unit.division == division:
             unit.paused = True
+
+def select_iwabuchi_breakout_area(map_areas):
+    breakout_areas = []
+    for area in map_areas:
+        if area.control == 'American' and area.terrain in ('urban', 'fort'):
+            for adjacent_area in map_areas:
+                if adjacent_area.identifier in area.adjacent_areas:
+                    if adjacent_area.control == 'Japanese':
+                        breakout_areas.append(area)
+                        break
+    return random.choice(breakout_areas)
+
+def iwabuchi_deploy_unit(breakout_area, area_units):
+    new_japanese_unit = random.choice(area_units)
+    breakout_area.japanese_unit = new_japanese_unit
+    area_units.remove(new_japanese_unit)
 
 
 # combat phase

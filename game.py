@@ -201,8 +201,11 @@ def main():
                 area.contested = True
             else:
                 area.contested = False
+            if area.japanese_unit and not area.american_units:
+                area.mandatory_attack = True
 
-            if (area.rect.collidepoint(pos) and not selected_area) or (PHASES[phase_index] == 'Combat' and selected_area == area):
+            # this logic may need tinkering with the iwabuchi breakout
+            if (area.rect.collidepoint(pos) and not selected_area and not (PHASES[phase_index] == 'Event' and game_events[-1].type == 'Iwabuchi Breakout' and retreating_units)) or (PHASES[phase_index] == 'Combat' and selected_area == area) or (PHASES[phase_index] == 'Event' and game_events[-1].type == 'Iwabuchi Breakout' and retreating_units and area == breakout_area):
                 # make everything below it's own function probably
                 # informational text
                 text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, area.area_title, 'white', HEADER_SIZE)
@@ -375,6 +378,15 @@ def main():
                                 pause_division(american_units, '11th Air')
                             elif game_events[-1].type == 'Shimbu Group Breakthrough':
                                 withdraw_44th_battallion(TURNS[turn_index][0], american_units, map_areas, out_of_action_units, morale, premanent=False)
+                            elif game_events[-1].type == 'Iwabuchi Breakout':
+                                breakout_area = select_iwabuchi_breakout_area(map_areas)
+                                retreating_units = [unit for unit in breakout_area.american_units]
+                                if breakout_area.terrain == 'urban':
+                                    iwabuchi_deploy_unit(breakout_area, japanese_units_urban)
+                                elif breakout_area.terrain == 'fort':
+                                    iwabuchi_deploy_unit(breakout_area, japanese_units_fort)
+
+
 
                         # SUPPLY PHASE
                         if PHASES[phase_index] == 'Supply':
@@ -390,6 +402,30 @@ def main():
                                 if bloody_streets_results:
                                     for result in bloody_streets_results:
                                         print(result)
+
+                # EVENTS
+                if PHASES[phase_index] == 'Event':
+                    if game_events[-1].type == 'Iwabuchi Breakout':
+                        if retreating_units:
+                            if retreating_unit:
+                                for area in map_areas:
+                                    if area.rect.collidepoint(pos):
+                                        if area in retreating_unit.previous_area.adjacent_areas:
+                                            retreating_units = retreat_stacked(retreating_unit, area, breakout_area, retreating_units)
+                                            retreating_unit = None
+                                            unit.retreating = False
+                                            unit.spent = True
+                            else:
+                                for unit in retreating_units:
+                                    if unit.rect.collidepoint(pos):
+                                        initial_len = len(retreating_units)
+                                        retreating_units = retreat(unit, breakout_area, retreating_units)
+                                        after_len = len(retreating_units)
+                                        if initial_len == after_len:
+                                            retreating_unit = unit
+                                            unit.retreating = True
+                                        else:
+                                            unit.spent = True
 
 
                 # COMBAT
@@ -560,7 +596,7 @@ def main():
                                         print('More than 1 Artillery Support not allowed')
                                 if engineer_support_attack.rect.collidepoint(pos):
                                     request_support(engineer_support_attack, support_units)
-                                    attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
+                                attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
                             # selected_area.japanese_unit.revealed = True
                             selected_area.calculate_defense_value(morale) # have this run whenever the japanese unit gets revealed like the line above
                             # print(area.identifier)
