@@ -121,6 +121,7 @@ def main():
     # attack_result = None
     lead_attack_unit = None
     retreating_units = []
+    retreating_unit = None
     morale_message_4 = None
 
     
@@ -441,9 +442,23 @@ def main():
 
                     # attacking
                     if retreating_units:
-                        for unit in retreating_units:
-                            if unit.rect.collidepoint(pos):
-                                retreating_units = retreat(unit, selected_area, retreating_units)
+                        if retreating_unit:
+                            for area in map_areas:
+                                if area.rect.collidepoint(pos):
+                                    if area in retreating_unit.previous_area.adjacent_areas:
+                                        retreating_units = retreat_stacked(retreating_unit, area, selected_area, retreating_units)
+                                        # retreating_unit = None
+                                        unit.retreating = False
+                        else:
+                            for unit in retreating_units:
+                                if unit.rect.collidepoint(pos):
+                                    initial_len = len(retreating_units)
+                                    retreating_units = retreat(unit, selected_area, retreating_units)
+                                    after_len = len(retreating_units)
+                                    if initial_len == after_len:
+                                        retreating_unit = unit
+                                        unit.retreating = True
+                                    # run a message and code to select area next to stacked area to retreat to
                                 # if retreat_stacked:
 
 
@@ -488,13 +503,17 @@ def main():
                             attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
                             out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
                         if retreat_button.rect.collidepoint(pos):
+                            retreating_units = [unit for unit in attacking_units]
                             attacking_units, lead_attack_unit = barrage_retreat(attacking_units, lead_attack_unit)
                             support_units[0].count += artillery_support_attack.count
-                            support_units[1].count += engineer_support_attack.count
-                            # function for retreating 
+                            support_units[1].count += engineer_support_attack.count                          
                             selected_area.japanese_unit.strategy_available = False
                             barrage = False
                             barrage_retreating = True
+                            attack_result = None
+                            
+                            
+
                            
 
 

@@ -28,6 +28,7 @@ class AmericanUnit:
         self.attacking = False
         self.attack_lead = False
         self.moving = False
+        self.retreating = False
         self.movement_factor_remaining = movement_factor
         self.previous_area = None
         self.selected = False

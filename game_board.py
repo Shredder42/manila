@@ -42,7 +42,7 @@ class MapArea:
             self.__update_american_unit_positions()
             if unit.unit_type in STACKING_UNIT_TYPES:
                 self.stack_count += 1
-            print('ran add unit to area')
+            # print('ran add unit to area')
 
     def remove_unit_from_area(self, unit):
         self.american_units.remove(unit)
