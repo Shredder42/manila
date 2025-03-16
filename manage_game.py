@@ -285,6 +285,7 @@ def select_iwabuchi_breakout_area(map_areas):
 def iwabuchi_deploy_unit(breakout_area, area_units):
     new_japanese_unit = random.choice(area_units)
     breakout_area.japanese_unit = new_japanese_unit
+    breakout_area.control = 'Japanese'
     area_units.remove(new_japanese_unit)
 
 
@@ -370,7 +371,7 @@ def remove_from_action(unit, area, out_of_action_units):
     unit.out_of_action = True
     out_of_action_units.append(unit)
     update_out_of_action_unit_positions(out_of_action_units)
-
+    unit.attacking = False
     return out_of_action_units
 
 def highlight_unit(unit, surface):
@@ -539,6 +540,8 @@ def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_uni
         unit.attacking = False
         if attack_result in ('repulse', 'stalemate', 'success'):
             unit.spent = True
+        if attack_result == 'overrun':
+            unit.movement_factor_remaining = unit.movement_factor
         if unit.attack_lead:
             unit.attack_lead = False
             if attack_result == 'repulse':
@@ -554,6 +557,8 @@ def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_uni
 
     if attack_result == 'repulse':
         morale.adjust_morale(-1)
+
+
 
 
     return out_of_action_units
@@ -573,6 +578,28 @@ def retreat_stacked(unit, area, selected_area, retreating_units):
         retreating_units.remove(unit)
         unit.retreating = False
     return retreating_units
+
+# end phase
+def check_for_automatic_victory(map_areas):
+    for area in map_areas:
+        if area.control == 'Japanese':
+            return False
+    else:
+        return True
+    
+def check_for_operational_victory(map_areas):
+    count = 0
+    for area in map_areas:
+        if area.control == 'American':
+            count += 1
+    if count >= 34 and map_areas[36].control == 'American':
+        return True
+    else:
+        return False
+    
+
+
+
     
 
 

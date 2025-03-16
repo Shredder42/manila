@@ -123,6 +123,7 @@ def main():
     retreating_units = []
     retreating_unit = None
     morale_message_4 = None
+    control_mode = False
 
     
     while running:
@@ -204,6 +205,9 @@ def main():
             if area.japanese_unit and not area.american_units:
                 area.mandatory_attack = True
 
+            if control_mode:
+                area.draw_control(screen)
+
             # this logic may need tinkering with the iwabuchi breakout
             if (area.rect.collidepoint(pos) and not selected_area and not (PHASES[phase_index] == 'Event' and game_events[-1].type == 'Iwabuchi Breakout' and retreating_units)) or (PHASES[phase_index] == 'Combat' and selected_area == area) or (PHASES[phase_index] == 'Event' and game_events[-1].type == 'Iwabuchi Breakout' and retreating_units and area == breakout_area):
                 # make everything below it's own function probably
@@ -238,16 +242,18 @@ def main():
                         unit.draw(screen)
 
         if control.rect.collidepoint(pos):
-            control_message_1 = 'Automatic Victory if every Area is American controlled'
-            control_message_2 = 'Operational Victory if Americans control:'
-            text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, f'Areas controlled by American Forces', 'white', HEADER_SIZE)
-            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, control_message_1, 'white', LINE_SIZE)
-            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, control_message_2, 'white', LINE_SIZE)
-            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, '- At least 34 Areas', 'white', LINE_SIZE)
-            text_on_screen(LEFT_EDGE_INDENTED_X, ROW_4_Y, '- Intramuros (Area 37)', 'white', LINE_SIZE)
+            text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Click to toggle Control Mode', 'white', LINE_SIZE)
+            if not selected_area:
+                control_message_1 = 'Automatic Victory if every Area is American controlled'
+                control_message_2 = 'Operational Victory if Americans control:'
+                text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, f'Areas controlled by American Forces', 'white', HEADER_SIZE)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, control_message_1, 'white', LINE_SIZE)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, control_message_2, 'white', LINE_SIZE)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, '- At least 34 Areas', 'white', LINE_SIZE)
+                text_on_screen(LEFT_EDGE_INDENTED_X, ROW_4_Y, '- Intramuros (Area 37)', 'white', LINE_SIZE)
 
         for support_unit in support_units:
-            if support_unit.rect.collidepoint(pos):
+            if support_unit.rect.collidepoint(pos) and not selected_area:
                 text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, support_unit.type.title(), 'white', HEADER_SIZE)
                 text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'+{support_unit.attack_value} to Attack Value', 'white', LINE_SIZE)
                 text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'Supply Cost: {support_unit.cost} Point(s)', 'white', LINE_SIZE)
@@ -255,7 +261,7 @@ def main():
                     support_unit_message = 'Required for Combined Arms Bonus in Urban and Fort Areas'
                     text_on_screen(LEFT_EDGE_INDENTED_X, ROW_3_Y, support_unit_message, 'white', LINE_SIZE)
 
-        if morale.rect.collidepoint(pos):
+        if morale.rect.collidepoint(pos) and not selected_area:
             morale_message_1 = '+1 to Attack Value if Strong'
             morale_message_2 = '+1 to Defense Value if Shaken'
             morale_message_3 = 'Americans lose if Morale drops to 0 after any Combat Phase'
@@ -274,7 +280,7 @@ def main():
         if not morale.rect.collidepoint(pos):
             morale_message_4 = None
 
-        if supply.rect.collidepoint(pos):
+        if supply.rect.collidepoint(pos) and not selected_area:
             text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, 'Total Supply available', 'white', HEADER_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, 'Supply Costs:', 'white', LINE_SIZE)
             text_on_screen(LEFT_EDGE_INDENTED_X, ROW_2_Y, f'- Artillery Support: {SUPPLY_COSTS["artillery support"]}', 'white', LINE_SIZE)
@@ -288,17 +294,23 @@ def main():
         # reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units)
         # print(reinforcement_units)
 
+        if reinforcement_units:
         # turn 2 reinforcements
-        if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
-            text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Available', 'white', HEADER_SIZE)
-            text_on_screen(LEFT_EDGE_X, 580, 'Select Units to add to American controlled Areas 27, 28, or 30', 'white', LINE_SIZE)
-            # for unit in reinforcement_units:
-            #     unit.draw(screen)
+            if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
+                text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Available', 'white', HEADER_SIZE)
+                text_on_screen(LEFT_EDGE_X, 580, 'Select Units to add to American controlled Areas 27, 28, or 30', 'white', LINE_SIZE)
+                # for unit in reinforcement_units:
+                #     unit.draw(screen)
 
-        # turn 6 reinforcements
-        if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
-            text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Arrived', 'white', HEADER_SIZE)
-            text_on_screen(LEFT_EDGE_X, 580, 'Click to deploy one Armor Unit to each Area 1 and 2', 'white', LINE_SIZE)
+            # turn 6 reinforcements
+            elif TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
+                text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Arrived', 'white', HEADER_SIZE)
+                text_on_screen(LEFT_EDGE_X, 580, 'Click to deploy one Armor Unit to each Area 1 and 2', 'white', LINE_SIZE)
+
+            # other reinforcements
+            else:
+                text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Available', 'white', HEADER_SIZE)
+                text_on_screen(LEFT_EDGE_X, 580, 'Select Units to add to American controlled Area in same division', 'white', LINE_SIZE)
 
         
         if PHASES[phase_index] == 'Combat':
@@ -402,6 +414,27 @@ def main():
                                 if bloody_streets_results:
                                     for result in bloody_streets_results:
                                         print(result)
+
+                        # END PHASE
+                        if PHASES[phase_index] == 'End':
+                            auto_victory = check_for_automatic_victory(map_areas)
+                            if not auto_victory:
+                                if morale.count == 0:
+                                    morale_loss = True
+                                if not morale_loss:
+                                    for unit in american_units:
+                                        unit.spent = False
+                                    morale.adjust_morale(-1)
+
+                            if TURNS[turn_index][0] == 9:
+                                operational_victory = check_for_operational_victory(map_areas)
+
+                # control mode
+                if control.rect.collidepoint(pos):
+                    if not control_mode:
+                        control_mode = True
+                    else:
+                        control_mode = False
 
                 # EVENTS
                 if PHASES[phase_index] == 'Event':

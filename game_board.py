@@ -19,6 +19,7 @@ class MapArea:
         self.japanese_unit = None # maybe a funtion to randomly pick the unit (this is currently in game.py)
         self.defense_value = '?'
         self.mandatory_attack = True
+        self.control_image = self.__load_control_image()
 
     def __update_american_unit_positions(self):
         '''
@@ -65,7 +66,22 @@ class MapArea:
             if morale.shaken:
                 self.defense_value += 1
 
+    def __load_control_image(self):
+        '''
+        load the american control image 
+        '''
+        control_image = pygame.image.load(f'./images/control_front.png')
+        control_image = pygame.transform.smoothscale(control_image, UNIT_SIZE)
+
+        return control_image
+
             
+    def draw_control(self, surface):
+        '''
+        draw the image on the board if American controlled
+        '''
+        if self.control == 'American':
+            surface.blit(self.control_image, self.rect)
 
 
 def create_map():
