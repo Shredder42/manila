@@ -105,7 +105,7 @@ def main():
     selected_unit = None
     selected_area = None
     move_from_area = None
-    turn_index = 8 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 0 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     # areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
@@ -127,6 +127,7 @@ def main():
     morale_loss = False
     auto_victory = False
     operational_victory = False
+    message = None
     
     while running:
         screen.fill(ESPRESSO)
@@ -188,6 +189,9 @@ def main():
 
         if retreating_units and not retreating_unit:
             text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Select units individually to retreat', 'white', LINE_SIZE)
+
+        if message:
+            text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, message, 'white', LINE_SIZE)
         
         pos = pygame.mouse.get_pos()
 
@@ -200,7 +204,10 @@ def main():
         # testing - remove
         # test_unit1.draw(screen)
         # test_unit2.draw(screen)
-        
+        if selected_area:
+            for unit in selected_area.american_units:
+                if unit.rect.collidepoint(pos):
+                    text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, f'Movement factor remaining: {unit.movement_factor_remaining}', 'white', LINE_SIZE)
 
         for area in map_areas:
             if area.japanese_unit and area.american_units:
@@ -374,6 +381,9 @@ def main():
                 if auto_victory or operational_victory or morale_loss:
                     running = False
 
+                if message:
+                    message = None
+
                 # advancing the game
                 if not mandatory_attacks and not planning_attack and not attacking:
                     if advance_button.rect.collidepoint(pos):
@@ -414,7 +424,7 @@ def main():
                                 breakout_area = select_iwabuchi_breakout_area(map_areas)
                                 retreating_units = [unit for unit in breakout_area.american_units]
                                 if breakout_area.terrain == 'urban':
-                                    iwabuchi_deploy_unit(breakout_area, japanese_units_urban)
+                                    iwabuchi_deploy_unit(breakout_area, japanese_units_urban, control)
                                 elif breakout_area.terrain == 'fort':
                                     iwabuchi_deploy_unit(breakout_area, japanese_units_fort)
 

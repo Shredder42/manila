@@ -282,10 +282,11 @@ def select_iwabuchi_breakout_area(map_areas):
                         break
     return random.choice(breakout_areas)
 
-def iwabuchi_deploy_unit(breakout_area, area_units):
+def iwabuchi_deploy_unit(breakout_area, area_units, control):
     new_japanese_unit = random.choice(area_units)
     breakout_area.japanese_unit = new_japanese_unit
     breakout_area.control = 'Japanese'
+    control.count -= 1
     area_units.remove(new_japanese_unit)
 
 
