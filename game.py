@@ -105,7 +105,7 @@ def main():
     selected_unit = None
     selected_area = None
     move_from_area = None
-    turn_index = 1 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 0 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     # areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
@@ -124,6 +124,9 @@ def main():
     retreating_unit = None
     morale_message_4 = None
     control_mode = False
+    morale_loss = False
+    auto_victory = False
+    operational_victory = False
 
     
     while running:
@@ -181,6 +184,9 @@ def main():
                 text_on_screen(1078, 660, str(engineer_support_attack.count), 'white', COUNTER_SIZE)
                 text_on_screen(LEFT_EDGE_X, 710, f'Attack Value: {attack_value}', 'white', HEADER_SIZE)
                 text_on_screen(LEFT_EDGE_X, 740, f'Defense Value: {selected_area.defense_value}', 'white', HEADER_SIZE)
+
+        if retreating_units and not retreating_unit:
+            text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Select units individually to retreat', 'white', LINE_SIZE)
         
         pos = pygame.mouse.get_pos()
 
@@ -402,7 +408,7 @@ def main():
 
                         # SUPPLY PHASE
                         if PHASES[phase_index] == 'Supply':
-                            supply.add_supply(get_supply(TURNS[turn_index], game_events[-1].type))
+                            supply.add_supply(get_supply(TURNS[turn_index][0], game_events[-1].type))
 
                         # COMBAT PHASE
                         if PHASES[phase_index] == 'Combat':
@@ -424,6 +430,7 @@ def main():
                                 if not morale_loss:
                                     for unit in american_units:
                                         unit.spent = False
+                                        unit.movement_factor_remaining = unit.movement_factor
                                     morale.adjust_morale(-1)
 
                             if TURNS[turn_index][0] == 9:

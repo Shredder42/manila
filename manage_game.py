@@ -321,6 +321,8 @@ def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
 
     if move_to_area.identifier in move_from_area.adjacent_areas:
         if movement_cost <= unit.movement_factor_remaining:
+            if move_from_area.contested and move_to_area.japanese_unit:
+                return 'Must move to vacant Area when leaving Contested Area'
             message = move_to_area.add_unit_to_area(unit)
             if not message:
                 unit.deduct_movement_cost(movement_cost, stop_required)
