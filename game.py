@@ -105,7 +105,7 @@ def main():
     selected_unit = None
     selected_area = None
     move_from_area = None
-    turn_index = 0 # this will increment at end of every turn (one below actual turn number)
+    turn_index = 8 # this will increment at end of every turn (one below actual turn number)
     phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
     # areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
     reinforcement_units = []
@@ -127,7 +127,6 @@ def main():
     morale_loss = False
     auto_victory = False
     operational_victory = False
-
     
     while running:
         screen.fill(ESPRESSO)
@@ -153,6 +152,8 @@ def main():
         text_on_screen(90, 890, str(support_units[1].count), 'black', COUNTER_SIZE)
         text_on_screen(90, 950, str(supply.count), 'black', COUNTER_SIZE)
         for unit in reinforcement_units:
+            if PHASES[phase_index] in ('Dawn', 'Supply') and selected_unit == unit:
+                highlight_unit(unit, screen)
             unit.draw(screen)
         if game_events and PHASES[phase_index] != 'Dawn':
             game_events[-1].draw(screen)
@@ -190,7 +191,6 @@ def main():
         
         pos = pygame.mouse.get_pos()
 
-
         if advance_button.rect.collidepoint(pos):
             if not planning_attack and not attacking:
                 if mandatory_attacks:
@@ -201,7 +201,6 @@ def main():
         # test_unit1.draw(screen)
         # test_unit2.draw(screen)
         
-
 
         for area in map_areas:
             if area.japanese_unit and area.american_units:
@@ -340,6 +339,19 @@ def main():
                     if retreat_button.rect.collidepoint(pos)                    :
                         text_on_screen(retreat_button.rect.x + 5, retreat_button.rect.y + 75, 'Retreat', 'white', LINE_SIZE)
 
+
+        if PHASES[phase_index] == 'End':
+            if auto_victory:
+                text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Automatic Victory! Americans control the entire city', 'white', LINE_SIZE)
+            if TURNS[turn_index][0] == 9:
+                if operational_victory:
+                    text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, f'Operational Victory! American control Intramuros and {control.count} Areas', 'white', LINE_SIZE)
+                else:    
+                    text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Japanese Victory! Americans fail to control the city', 'white', LINE_SIZE)
+            if morale_loss:
+                text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Japanese Victory! American Morale has been exhausted', 'white', LINE_SIZE)
+
+
             # mandatory withdrawal
             # units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
             # for unit in units_to_withdraw:
@@ -359,6 +371,8 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(pos)
 
+                if auto_victory or operational_victory or morale_loss:
+                    running = False
 
                 # advancing the game
                 if not mandatory_attacks and not planning_attack and not attacking:
@@ -425,16 +439,18 @@ def main():
                         if PHASES[phase_index] == 'End':
                             auto_victory = check_for_automatic_victory(map_areas)
                             if not auto_victory:
-                                if morale.count == 0:
-                                    morale_loss = True
+                                if TURNS[turn_index][0] == 9:
+                                    operational_victory = check_for_operational_victory(map_areas)
+                                if not operational_victory and TURNS[turn_index][0] < 9:
+                                    if morale.count == 0:
+                                        morale_loss = True
                                 if not morale_loss:
                                     for unit in american_units:
                                         unit.spent = False
                                         unit.movement_factor_remaining = unit.movement_factor
                                     morale.adjust_morale(-1)
 
-                            if TURNS[turn_index][0] == 9:
-                                operational_victory = check_for_operational_victory(map_areas)
+
 
                 # control mode
                 if control.rect.collidepoint(pos):
@@ -612,11 +628,11 @@ def main():
                                             attacking_units.append(unit)
                                             unit.attacking = True
                                         elif unit.attacking:
-                                            if not unit.attack_lead: # makes unit lead attack unit
-                                                if lead_attack_unit:
-                                                    lead_attack_unit.attack_lead = False
-                                                unit.attack_lead = True
-                                                lead_attack_unit = unit
+                                            if not unit.attack_lead and unit.unit_type in ('infantry', 'armor'): # makes unit lead attack unit
+                                                    if lead_attack_unit:
+                                                        lead_attack_unit.attack_lead = False
+                                                    unit.attack_lead = True
+                                                    lead_attack_unit = unit
                                             else: # removes unit from attacking (and no longer lead)
                                                 attacking_units.remove(unit)
                                                 unit.attacking = False
