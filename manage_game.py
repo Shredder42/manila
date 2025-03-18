@@ -2,7 +2,7 @@ import pygame
 from constants import *
 import random
 
-# game control
+# game setup and control
 class Button:
     def __init__(self, x, y, filename):
         self.filename = filename
@@ -19,7 +19,30 @@ class Button:
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+def deploy_japanese_units(map_areas, terrain, area_units):
+    '''
+    adds Japanese units to the map, randomly selecting Area for each terrain
+    '''
+    for area in map_areas:
+        if area.terrain == terrain:
+            unit = random.choice(area_units)       
+            area.japanese_unit = unit
+            area_units.remove(unit)
+
+def deploy_initial_american_units(map_areas, american_units):
+    '''
+    adds starting Amercian units to the map in designated Areas
+    '''
+    for area in map_areas:
+        for unit in american_units:
+            if unit.setup == area.identifier and not unit.reinforcement:
+                area.add_unit_to_area(unit)
+
 def advance_game(phase_index, turn_index):
+    '''
+    advances phase of game by increaing phase index when advance game button is clicked
+    when phase index gets to 5 it resets to 0 and advances turn index
+    '''
     if phase_index == 4:
         phase_index = 0
         turn_index += 1
@@ -53,7 +76,6 @@ def roll_dice(dice_to_roll, drop_lowest=False):
         die_results = sorted_die_results[1:]
         
     return sum(die_results)
-    
 
 # Reinforcements
 def identify_reinforcement_units(turn, american_units, reinforcement_units):
@@ -92,30 +114,6 @@ def place_reinforcement(selected_unit, area, reinforcement_units):
     return selected_unit, message
 
 
-
-
-# def place_reinforcement_in_map_area(selected_unit, area, reinforcement_units):
-#     '''
-#     check if conditions are met and then place selected unit in selected area
-#     return the selected unit (None if the move was made)
-#     '''
-#     if area.identifier in selected_unit.setup:
-#         if (area.stack_limit and len(area.american_units) < area.stack_limit) or not area.stack_limit:
-#             if area.control == 'American':
-#                 area.american_units.append(selected_unit)
-#                 area.update_american_unit_positions()
-#                 reinforcement_units.remove(selected_unit)
-#                 selected_unit = None
-#             else:
-#                 # these prints can be changed to returns to put them on the screen if i want
-#                 print('Not an American controlled Area')
-#         else:
-#             print('Area is already at Stacking Limit')
-#     else:
-#         print('Not allowed to deploy to that Area')
-
-#     return selected_unit
-
 def place_turn_6_reinforcements(american_units, map_areas):
     '''
     place the 2 turn 6 armor units in the appropriate map areas
@@ -128,6 +126,9 @@ def place_turn_6_reinforcements(american_units, map_areas):
 
 # withdrawal
 def withdraw(turn, unit, map_areas, out_of_action_units, morale, permanent=False):
+    '''
+    handles the withdrawal of units from the board, both permanent and temporary
+    '''
     if permanent and unit.withdrawn:
         unit.reinforcement_turn = None
 
@@ -171,6 +172,11 @@ def leader_mortality(turn, out_of_action_units):
 
 # supply
 def get_supply(turn, event):
+    '''
+    determines the amount of supply that gets added in the supply phase
+    certain events limit dice rolled
+    in the first turn the minimum amount received is 12
+    '''
     if event in ('Kembu Group Offensive', 'Shimbu Group Offensive'):
         supply = roll_dice(2)
     else:
@@ -180,6 +186,10 @@ def get_supply(turn, event):
     return supply
 
 def update_return_areas(selected_unit, map_areas):
+    '''
+    updates the setup areas in the american unit to where they can return to the game as reinforcements from withdrawn or out of action
+    includes some base areas and if returning from out of action then they can return where there is a unit in the same division
+    '''
     possible_areas = []
 
     if selected_unit.withdrawn:
@@ -197,9 +207,10 @@ def update_return_areas(selected_unit, map_areas):
 
         for area in map_areas:
             if area.american_units:
-                for unit in area.american_units:
-                    if unit.division == selected_unit.division:
-                        possible_areas.append(area.identifier)
+                if area.control == 'American':
+                    for unit in area.american_units:
+                        if unit.division == selected_unit.division:
+                            possible_areas.append(area.identifier)
 
     selected_unit.setup = possible_areas
 
@@ -265,13 +276,16 @@ def update_out_of_action_unit_positions(out_of_action_units):
     
 def pause_division(american_units, division):
     '''
-    pause units in appropriate division based on event
+    pause units in appropriate division based on the event
     '''
     for unit in american_units:
         if unit.division == division:
             unit.paused = True
 
 def select_iwabuchi_breakout_area(map_areas):
+    '''
+    gathers potential areas for the Iwabuchi breakout and selects one
+    '''
     breakout_areas = []
     for area in map_areas:
         if area.control == 'American' and area.terrain in ('urban', 'fort'):
@@ -283,6 +297,9 @@ def select_iwabuchi_breakout_area(map_areas):
     return random.choice(breakout_areas)
 
 def iwabuchi_deploy_unit(breakout_area, area_units, control):
+    '''
+    places a new japanese unit in area where the iwabuchi breakout occurs
+    '''
     new_japanese_unit = random.choice(area_units)
     breakout_area.japanese_unit = new_japanese_unit
     breakout_area.control = 'Japanese'
@@ -319,7 +336,9 @@ def calculate_movement_cost(move_to_area, map_areas):
     return movement_cost, stop_required
 
 def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
-
+    '''
+    moves unit to new area or returns a message why it can't be moved
+    '''
     if move_to_area.identifier in move_from_area.adjacent_areas:
         if movement_cost <= unit.movement_factor_remaining:
             if move_from_area.contested and move_to_area.japanese_unit:
@@ -342,6 +361,10 @@ def move_unit(unit, move_from_area, move_to_area, movement_cost, stop_required):
     return message
 
 def bloody_streets_roll(area):
+    '''
+    rolls die to determine the bloody streets effect
+    '''
+
     roll = roll_dice(1)
     if area.japanese_unit.strategy == 'elite':
         roll += 1
@@ -349,6 +372,12 @@ def bloody_streets_roll(area):
     return roll
 
 def bloody_streets(bloody_streets_areas, out_of_action_units):
+    '''
+    applies the result of the bloody streets roll
+    4 is randomly put a unit in out of action
+    5 reduces morale by 1
+    6+ reduces morale and swtiches all units in area to spent
+    '''
     morale_loss = 0
     results = []
     for area in bloody_streets_areas:
@@ -403,6 +432,9 @@ def request_support(support_unit_attack, support_units):
         support_units[support_unit_index].use_support_unit()
 
 def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, event, area):
+    '''
+    calculates the attack value
+    '''
     attack_value = 0
 
     infantry_unit = False
@@ -458,8 +490,10 @@ def calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_
 
     return attack_value
 
-def attack(attack_value, area, attacking_units):
-
+def attack(attack_value, area):
+    '''
+    performs the actual attack  by rolling the dice for each side and returning the result of the rolls and the total values
+    '''
     attack_battle_value = roll_dice(2)
     if area.japanese_unit.strategy_available and area.japanese_unit.strategy == 'elite':
         defense_battle_value = roll_dice(3, drop_lowest=True)
@@ -472,6 +506,9 @@ def attack(attack_value, area, attacking_units):
     return attack_battle_value, defense_battle_value, total_attack_value, total_defense_value
 
 def determine_attack_result(total_attack_value, total_defense_value, area):
+    '''
+    determines the outcome of the attack base on the values and the terrain and japanese units
+    '''
     if total_attack_value < total_defense_value:
         outcome = 'repulse'
     elif total_attack_value == total_defense_value:
@@ -488,12 +525,18 @@ def determine_attack_result(total_attack_value, total_defense_value, area):
     return outcome
 
 def sniper(attacking_units, area, out_of_action_units):
+    '''
+    applies the outcome of a sniper defense
+    removes a leader from action
+    if no leader is present, runs ambush instead
+    '''
     leaders = [unit for unit in attacking_units if unit.unit_type == 'leader']
-    print(leaders)
+    # print(leaders)
     if leaders:
         sniper_victim = random.choice(leaders)
-        print(sniper_victim.unit)
+        # print(sniper_victim.unit)
         sniper_victim.spent = True
+        attacking_units.remove(sniper_victim)
         out_of_action_units = remove_from_action(sniper_victim, area, out_of_action_units)
     else:
         out_of_action_units, attacking_units = ambush(attacking_units, area, out_of_action_units)
@@ -501,6 +544,10 @@ def sniper(attacking_units, area, out_of_action_units):
     return out_of_action_units, attacking_units
 
 def ambush(attacking_units, area, out_of_action_units):
+    '''
+    applies the outcome of an ambush defense
+    the lead unit is removed from action
+    '''
     print('ran ambush')
     for unit in attacking_units[:]:
         if unit.attack_lead:
@@ -509,6 +556,10 @@ def ambush(attacking_units, area, out_of_action_units):
             return remove_from_action(unit, area, out_of_action_units), attacking_units
         
 def barrage_press_on(attacking_units, lead_attack_unit, area, out_of_action_units):
+    '''
+    applies barrage if chosen to continue
+    removes one unit from action (not the lead unit) prior to the attack
+    '''
     fighting_units = [unit for unit in attacking_units if unit.unit_type in ('infantry', 'armor') and not unit.attack_lead]
 
     if fighting_units:
@@ -526,6 +577,10 @@ def barrage_press_on(attacking_units, lead_attack_unit, area, out_of_action_unit
     return attacking_units, out_of_action_units, lead_attack_unit
 
 def barrage_retreat(attacking_units, lead_attack_unit):
+    '''
+    applies the barrage if chosen to retreat
+    units become spend and are allowed to retreat
+    '''
     for unit in attacking_units:
         unit.spent = True
         unit.attacking = False
@@ -538,7 +593,14 @@ def barrage_retreat(attacking_units, lead_attack_unit):
     return attacking_units, lead_attack_unit
 
 
-def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_units, morale, control):
+def apply_attack_outcome(attack_result, attacking_units, area, out_of_action_units, morale, control):
+    '''
+    applies the outcome of the attack
+    overrun removes the japanese unit and units are not spent
+    success removes the japanese unit and units are spent
+    stalemate units are spent
+    repulse the lead unit is removed from action and morale drops by 1
+    '''
     for unit in attacking_units:
         unit.attacking = False
         if attack_result in ('repulse', 'stalemate', 'success'):
@@ -567,7 +629,9 @@ def apply_battle_outcome(attack_result, attacking_units, area, out_of_action_uni
     return out_of_action_units
 
 def retreat(unit, area, retreating_units):
-    # selected_area might not be the best - have to look at   
+    '''
+    adds unit the last area it was in during a retreat or returns a message that the area is fully stacked
+    '''
     message = unit.previous_area.add_unit_to_area(unit)
     if not message:
         area.remove_unit_from_area(unit)
@@ -575,6 +639,9 @@ def retreat(unit, area, retreating_units):
         return retreating_units
 
 def retreat_stacked(unit, area, selected_area, retreating_units):
+    '''
+    if the previous area was stacked allows selection of an adjacent area to previous to retreat to
+    '''
     message = area.add_unit_to_area(unit)
     if not message:
         selected_area.remove_unit_from_area(unit)
@@ -584,6 +651,9 @@ def retreat_stacked(unit, area, selected_area, retreating_units):
 
 # end phase
 def check_for_automatic_victory(map_areas):
+    '''
+    checks for an automatic victory - every area american controlled
+    '''
     for area in map_areas:
         if area.control == 'Japanese':
             return False
@@ -591,6 +661,9 @@ def check_for_automatic_victory(map_areas):
         return True
     
 def check_for_operational_victory(map_areas):
+    '''
+    checks for operational viction - 34+ areas and Intramuros american controlled
+    '''
     count = 0
     for area in map_areas:
         if area.control == 'American':

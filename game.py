@@ -19,11 +19,8 @@ pygame.display.set_caption('Manila - The Savage Streets, 1945')
 game_board = pygame.image.load('./images/map_only.png')
 game_board = pygame.transform.smoothscale_by(game_board, 0.8)
 
-# font_20 = pygame.font.SysFont('times new roman', 20)
-# surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA) # might not actually need this
 clock = pygame.time.Clock()
 
-# all testing areas - may get removed later
 advance_button = Button(1450, 10, 'arrow.png')
 plan_button = Button(1450, 100, 'plan_attack.png')
 attack_button = Button(1450, 100, 'attack.png')
@@ -39,64 +36,24 @@ test_unit1 = random.choice(american_units)
 test_unit2 = random.choice(japanese_units_clear)
 
 
-
-
-# move all this stuff later?
-def deploy_japanese_units(map_areas, terrain, area_units):
-    '''
-    adds Japanese units to the map, randomly selecting Area for each terrain
-    '''
-    for area in map_areas:
-        if area.terrain == terrain:
-            unit = random.choice(area_units)       
-            area.japanese_unit = unit
-            area_units.remove(unit)
-
-def deploy_initial_american_units(map_areas, american_units):
-    '''
-    adds starting Amercian units to the map in designated Areas
-    '''
-    for area in map_areas:
-        for unit in american_units:
-            if unit.setup == area.identifier and not unit.reinforcement:
-                area.add_unit_to_area(unit)
-
 map_areas = create_map()
 deploy_japanese_units(map_areas, 'clear', japanese_units_clear)
 deploy_japanese_units(map_areas, 'fort', japanese_units_fort)
 deploy_japanese_units(map_areas, 'urban', japanese_units_urban)
 american_setup_map_areas = [map_areas[0], map_areas[1], map_areas[29]]
 deploy_initial_american_units(american_setup_map_areas, american_units)
-# these lines for testing - remove when done
-# map_areas[0].japanese_unit = test_unit2 
-# map_areas[2].contested = True
+
 
 def text_on_screen(x, y, message, color, size):
+    '''
+    takes renders text from the message on screen in the given location, size, and color
+    '''
     font = pygame.font.SysFont('times new roman', size)
     text = font.render(message, True, color)
     text_rect = text.get_rect()
     text_rect.x = x
     text_rect.y = y
     screen.blit(text, text_rect)
-
-# def update_out_of_action_unit_positions(out_of_action_units):
-#     '''
-#     updates the rect values in the American units when they are added or removed from 
-#     out of action
-#     '''
-#     for index, unit in enumerate(out_of_action_units):
-#         unit.rect.x = LEFT_EDGE_X + ((index % 6) * 60)
-#         if index <= 5:
-#             unit.rect.y = OUT_OF_ACTION_Y1 
-#         elif index >=6 and index <= 11:
-#             unit.rect.y = OUT_OF_ACTION_Y2
-#         elif index >= 11 and index <= 17:
-#             unit.rect.y = OUT_OF_ACTION_Y3
-#         else:
-#             unit.rect.y = OUT_OF_ACTION_Y4
-
-
-
 
 
 
@@ -105,9 +62,8 @@ def main():
     selected_unit = None
     selected_area = None
     move_from_area = None
-    turn_index = 0 # this will increment at end of every turn (one below actual turn number)
-    phase_index = 0 # this will increment at end of every phase and turn over at the end - update manually for now
-    # areas_controlled = 3 # this will need to be updated by a function whenever an area flips to American control
+    turn_index = 0 # this increments at end of every turn (one below actual turn number)
+    phase_index = 0 # this increments at end of every phase and turn over at the end - update manually for now
     reinforcement_units = []
     out_of_action_units = []
     game_events = []
@@ -118,7 +74,6 @@ def main():
     attacking = False
     barrage = False
     barrage_retreating = False
-    # attack_result = None
     lead_attack_unit = None
     retreating_units = []
     retreating_unit = None
@@ -201,9 +156,7 @@ def main():
                     text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Mandatory Attacks remaining', 'white', LINE_SIZE)
                 else:
                     text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
-        # testing - remove
-        # test_unit1.draw(screen)
-        # test_unit2.draw(screen)
+
         if selected_area:
             for unit in selected_area.american_units:
                 if unit.rect.collidepoint(pos):
@@ -220,9 +173,8 @@ def main():
             if control_mode:
                 area.draw_control(screen)
 
-            # this logic may need tinkering with the iwabuchi breakout
             if (area.rect.collidepoint(pos) and not selected_area and not (PHASES[phase_index] == 'Event' and game_events[-1].type == 'Iwabuchi Breakout' and retreating_units)) or (PHASES[phase_index] == 'Combat' and selected_area == area) or (PHASES[phase_index] == 'Event' and game_events[-1].type == 'Iwabuchi Breakout' and retreating_units and area == breakout_area):
-                # make everything below it's own function probably
+
                 # informational text
                 text_on_screen(LEFT_EDGE_X, HEADER_ROW_Y, area.area_title, 'white', HEADER_SIZE)
                 text_on_screen(LEFT_EDGE_INDENTED_X, ROW_1_Y, f'{area.control} controlled', 'white', LINE_SIZE)
@@ -303,16 +255,12 @@ def main():
 
 
         # reinforcement part of Dawn
-        # reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units)
-        # print(reinforcement_units)
 
         if reinforcement_units:
         # turn 2 reinforcements
             if TURNS[turn_index][0] == 2 and PHASES[phase_index] == 'Dawn':
                 text_on_screen(LEFT_EDGE_X, 550, 'Reinforcements Available', 'white', HEADER_SIZE)
                 text_on_screen(LEFT_EDGE_X, 580, 'Select Units to add to American controlled Areas 27, 28, or 30', 'white', LINE_SIZE)
-                # for unit in reinforcement_units:
-                #     unit.draw(screen)
 
             # turn 6 reinforcements
             elif TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
@@ -358,18 +306,6 @@ def main():
             if morale_loss:
                 text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Japanese Victory! American Morale has been exhausted', 'white', LINE_SIZE)
 
-
-            # mandatory withdrawal
-            # units_to_withdraw = [unit for unit in american_units if unit.unit.startswith('44_')]
-            # for unit in units_to_withdraw:
-            #     withdrawal(6, unit, map_areas, out_of_action_units, morale, True)          
-            #     update_out_of_action_unit_positions(out_of_action_units)
-
-        # for unit in map_areas[1].american_units:
-        #     print(unit.unit)
-        # # print(map_areas[1].identifier)
-        # if american_units[0] in map_areas[1].american_units:
-        #     remove_from_action(american_units[0], map_areas[1], out_of_action_units)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -460,8 +396,6 @@ def main():
                                         unit.movement_factor_remaining = unit.movement_factor
                                     morale.adjust_morale(-1)
 
-
-
                 # control mode
                 if control.rect.collidepoint(pos):
                     if not control_mode:
@@ -495,11 +429,6 @@ def main():
 
 
                 # COMBAT
-                # may want to rework this entire section to be more efficient
-                    # only select area once (and only if contains fresh american units)
-                # select area and lock it so can interact with the units in it (will also need to be in the event for iwabuchi)
-                # modify this after moving cuz will be easier to move units around then
-                # get unit selected for moving to stay on the screen
                 if PHASES[phase_index] == 'Combat':
                     if not planning_attack and not attacking:
                     # movement
@@ -520,8 +449,6 @@ def main():
                                     if message:
                                         selected_unit.rect.x = previous_rect_x
                                         selected_unit.rect.y = previous_rect_y
-                                    # if area.japanese_unit and area.american_units:
-                                    #     area.contested = True
                                     if area.mandatory_attack and area.contested:
                                         mandatory_attacks.add(area)
                                     move_from_area = None
@@ -530,7 +457,7 @@ def main():
                                     print(mandatory_attacks)
 
 
-                        # show selected unit (probs where the reinforcement_units normally show)
+                        # show selected unit
                         if selected_area:
                             for unit in selected_area.american_units:
                                 if unit.rect.collidepoint(pos):
@@ -560,11 +487,6 @@ def main():
                                     if initial_len == after_len:
                                         retreating_unit = unit
                                         unit.retreating = True
-                                    # run a message and code to select area next to stacked area to retreat to
-                                # if retreat_stacked:
-
-
-
 
 
                     if attacking and not barrage and not retreating_units: 
@@ -574,7 +496,7 @@ def main():
                         #     if selected_area.japanese_unit.strategy == 'ambush':
                         #         out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
                         if attack_result:
-                            out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
+                            out_of_action_units = apply_attack_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
                         if selected_area.japanese_unit: # clear everything after attack
                             selected_area.japanese_unit.strategy_available = False
                         # for unit in attacking_units:
@@ -601,9 +523,11 @@ def main():
                             selected_area.japanese_unit.strategy_available = False
                             barrage = False
                             attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
-                            attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
+                            attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area)
                             attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
-                            out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
+                            if attack_result == 'repulse' and selected_area.mandatory_attack:
+                                retreating_units = [unit for unit in attacking_units if not unit.attack_lead]
+                            out_of_action_units = apply_attack_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
                         if retreat_button.rect.collidepoint(pos):
                             retreating_units = [unit for unit in attacking_units]
                             attacking_units, lead_attack_unit = barrage_retreat(attacking_units, lead_attack_unit)
@@ -613,14 +537,6 @@ def main():
                             barrage = False
                             barrage_retreating = True
                             attack_result = None
-                            
-                            
-
-                           
-
-
-                        # attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
-                        # attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
 
 
                     if selected_area and selected_area.contested:
@@ -633,7 +549,7 @@ def main():
                         else:
                             for unit in selected_area.american_units:
                                 if unit.rect.collidepoint(pos):
-                                    if not unit.paused and not unit.spent: # deal with paused and spent units (spent units also can't move)
+                                    if not unit.paused and not unit.spent: 
                                         if not unit.attacking: # puts unit in attack
                                             attacking_units.append(unit)
                                             unit.attacking = True
@@ -663,11 +579,9 @@ def main():
                                 if engineer_support_attack.rect.collidepoint(pos):
                                     request_support(engineer_support_attack, support_units)
                                 attack_value = calculate_attack_value(lead_attack_unit, attacking_units, artillery_support_attack, engineer_support_attack, morale, game_events[-1], selected_area)
-                            # selected_area.japanese_unit.revealed = True
-                            selected_area.calculate_defense_value(morale) # have this run whenever the japanese unit gets revealed like the line above
-                            # print(area.identifier)
-                            # print(area.japanese_unit.revealed)
-                            # defense_value = calculate_defense_value(selected_area, morale)
+
+                            selected_area.calculate_defense_value(morale) 
+
                             if attack_button.rect.collidepoint(pos):
                                 if attacking_units and lead_attack_unit:
                                     selected_area.japanese_unit.revealed = True
@@ -677,7 +591,7 @@ def main():
                                     if selected_area.japanese_unit.strategy_available and selected_area.japanese_unit.strategy == 'barrage':
                                         barrage = True
                                     if not barrage:
-                                        attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area, attacking_units)
+                                        attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area)
                                         attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
                                         print(attack_result)
                                         # print(selected_area.japanese_unit.strategy_available)
@@ -689,36 +603,10 @@ def main():
                                                 out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
                                         if attack_result == 'repulse' and selected_area.mandatory_attack:
                                             retreating_units = [unit for unit in attacking_units if not unit.attack_lead]
-                                            # for unit in retreating_units:
-                                            #     print(unit.unit)
-                                        # print(retreating_units)
-                                                # print(out_of_action_units)
-                                        # out_of_action_units = apply_battle_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control, False)
-                        
 
 
-                            
-
-
-
-
-                # turn_index = 5
-
-                # if TURNS[turn_index][0] == 5 and PHASES[phase_index] == 'Dawn' and out_of_action_units:
-                    # mortality = leader_mortality(TURNS[turn_index][0], out_of_action_units)
-                    # print(mortality)
-
-                # this is a test of out_of_action_units - remove later and update code
-                # if map_areas[0].rect.collidepoint(pos):
-                #     out_of_action_units = remove_from_action(map_areas[0].american_units[-1], map_areas[0], out_of_action_units)
-                if american_units[0] in map_areas[1].american_units and map_areas[2].rect.collidepoint(pos):
-                    remove_from_action(american_units[0], map_areas[1], out_of_action_units)
-                    remove_from_action(american_units[21], map_areas[1], out_of_action_units)
-                    remove_from_action(american_units[22], map_areas[1], out_of_action_units)
-                    remove_from_action(american_units[29], map_areas[1], out_of_action_units)
-                    # reinforcement_units = identify_reinforcement_units(TURNS[turn_index][0], american_units, reinforcement_units)
-
-                # reinforcements UPDATE HOW REINFORCEMENT UNITS GET ADDED (TURN QUALIFIER - SHOULD ONLY WORK IN CORRECT PHASE FOR BOTH )
+                # dawn
+                # reinforcements
                 if PHASES[phase_index] in ('Dawn', 'Supply'):
                     # print(selected_unit.unit)
                     for unit in reinforcement_units:
@@ -731,12 +619,7 @@ def main():
                         for area in map_areas:
                             if area.rect.collidepoint(pos):
                                 selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
-                # print(selected_unit)
 
-                # if TURNS[turn_index][0] == 6 and PHASES[phase_index] == 'Dawn':
-                #     place_turn_6_reinforcements(american_units, map_areas[:2])
-                #     for unit in reinforcement_units:
-                #         print(unit.unit)
 
                 # supply
                 if PHASES[phase_index] == 'Supply':
@@ -772,7 +655,6 @@ def main():
                                     update_out_of_action_unit_positions(out_of_action_units)
                                 
                     # finish placing the reinforcement
-                    # print(selected_unit.unit)
                     print(f'first rein units {reinforcement_units}')
                     if reinforcement_units and not selected_unit:
                         for unit in reinforcement_units:
@@ -787,9 +669,6 @@ def main():
                                 # print(f'third rein unit {reinforcement_units}')
                                 selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
                     # print(f'selected unit {selected_unit}')                                              
-
-
-
 
 
 
