@@ -11,7 +11,21 @@ pygame.init()
 pygame.font.init()
 
 
-# To Do
+# To Do in future
+# add more messages about when things are occurring (e.g. units withdrawing due to turn or event)
+# check for overlapping message text (esp bottom of screen)
+# check on retreating when the retreat to area is fully retreat_stacked
+#     retreating happens in 3 places (repulse mandatory attack, iwabuchi breakout, barrage retreat)
+# improve moving unit (to click and drag?)
+# update movement factor remaining?
+
+# handle mandatory attacks with paused units (if plan attack with only paused units game gets stuck)
+
+# Things that might be bugged in certain circumstances (watch out for because saw them once or twice but mostly they work)
+# adding reinforcements to areas with division units
+# leader not getting spent after a successful attack
+
+# SOUND FX????
 
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
