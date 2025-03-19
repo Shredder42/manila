@@ -371,29 +371,32 @@ def bloody_streets_roll(area):
 
     return roll
 
-def bloody_streets(bloody_streets_areas, out_of_action_units):
+def bloody_streets(bloody_streets_areas, out_of_action_units, morale):
     '''
     applies the result of the bloody streets roll
     4 is randomly put a unit in out of action
     5 reduces morale by 1
     6+ reduces morale and swtiches all units in area to spent
     '''
-    morale_loss = 0
     results = []
     for area in bloody_streets_areas:
         roll = bloody_streets_roll(area)
-        if roll == 4:
+        if roll == 4: 
             casualty_unit = random.choice(area.american_units) # this is change from actual rules - prefer if lost unit is random
             remove_from_action(casualty_unit, area, out_of_action_units)
-            results.append(f'{unit.unit} of the {unit.division} was knocked Out of Action from Area {area.identifier}: {area.area_title}')
+            results.append(f'{casualty_unit.unit} was knocked Out of Action from Area {area.identifier}')
         elif roll == 5:
-            morale_loss += 1
+            results.append('Morale Decrease')
+            morale.adjust_morale(-1)
         elif roll >= 6:
-            morale_loss += 1
+            morale.adjust_morale(-1)
             for unit in area.american_units:
                 unit.spent = True
             results.append(f'All units in Area {area.identifier}: {area.area_title} are spent')
-    return morale_loss, results
+            results.append('Morale Decrease')
+            morale.adjust_morale(-1)
+        # print(f'bloody streets roll {roll}')
+    return results
 
 def remove_from_action(unit, area, out_of_action_units):
     '''
@@ -521,7 +524,7 @@ def determine_attack_result(total_attack_value, total_defense_value, area):
 
     if outcome == 'success' and area.japanese_unit.strategy_available and area.japanese_unit.strategy == 'fanatic':
         outcome = 'stalemate'
-    
+
     return outcome
 
 def sniper(attacking_units, area, out_of_action_units):

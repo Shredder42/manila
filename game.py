@@ -82,6 +82,7 @@ def main():
     morale_loss = False
     auto_victory = False
     operational_victory = False
+    bloody_streets_results = []
     message = None
     
     while running:
@@ -294,6 +295,12 @@ def main():
                     if retreat_button.rect.collidepoint(pos)                    :
                         text_on_screen(retreat_button.rect.x + 5, retreat_button.rect.y + 75, 'Retreat', 'white', LINE_SIZE)
 
+            if bloody_streets_results:
+                result_rows = len(bloody_streets_results)
+                text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y - ((result_rows * 20) + 10), 'Results of fighting in the Bloody Streets', 'white', HEADER_SIZE)
+                for index, result in enumerate(bloody_streets_results):
+                    text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y - 20 * index, result, 'white', LINE_SIZE)
+
 
         if PHASES[phase_index] == 'End':
             if auto_victory:
@@ -319,6 +326,12 @@ def main():
 
                 if message:
                     message = None
+
+                # also put the bloody streets roll back to 4
+                if bloody_streets_results:
+                    print(bloody_streets_results)
+                    bloody_streets_results = []
+                    print(bloody_streets_results)
 
                 # advancing the game
                 if not mandatory_attacks and not planning_attack and not attacking:
@@ -372,11 +385,11 @@ def main():
 
                         # COMBAT PHASE
                         if PHASES[phase_index] == 'Combat':
-                            bloody_streets_areas = [area for area in map_areas if area.contested]
+                            bloody_streets_areas = [area for area in map_areas if area.contested and area.terrain in ('urban', 'fort')]
                             if bloody_streets_areas:
-                                morale_loss, bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units)
-                                morale.adjust_morale(-morale_loss)
-                                print(f'Morale dropped by {morale_loss} points')
+                                bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units, morale)
+                                # morale.adjust_morale(-morale_loss)
+                                # print(f'Morale dropped by {morale_loss} points')
                                 if bloody_streets_results:
                                     for result in bloody_streets_results:
                                         print(result)
@@ -430,6 +443,7 @@ def main():
 
                 # COMBAT
                 if PHASES[phase_index] == 'Combat':
+
                     if not planning_attack and not attacking:
                     # movement
                         for area in map_areas:
