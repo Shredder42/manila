@@ -180,7 +180,7 @@ def main():
                 else:
                     text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
 
-        if selected_area and not attacking:
+        if PHASES[phase_index] == 'Combat' and selected_area and not attacking and not planning_attack:
             for unit in selected_area.american_units:
                 if unit.rect.collidepoint(pos):
                     text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, f'Movement factor remaining: {unit.movement_factor_remaining}', 'white', LINE_SIZE)
