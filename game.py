@@ -18,6 +18,10 @@ pygame.font.init()
 #     retreating happens in 3 places (repulse mandatory attack, iwabuchi breakout, barrage retreat)
 # improve moving unit (to click and drag?)
 # update movement factor remaining?
+# full organization and label of code in the game.py file
+# update rect placement of the areas to fully cover the icons from the board (minor detail but would look nicer)
+# put retreating units into a function
+# look at reinforcements code from the dawn and supply phases - might be a bit redundant but it works
 
 # handle mandatory attacks with paused units (if plan attack with only paused units game gets stuck)
 
@@ -103,10 +107,11 @@ def main():
         screen.fill(ESPRESSO)
         screen.blit(game_board, (0,0))
         pygame.draw.rect(screen, BAY_COLOR, (30, 695, 230, 290))
+
+        # information and icons on screen at all times
         text_on_screen(LEFT_EDGE_X, 20, f'Turn {TURNS[turn_index][0]}: {TURNS[turn_index][1]}, 1945', 'white', COUNTER_SIZE)
         text_on_screen(LEFT_EDGE_X, 50, f'Phase: {PHASES[phase_index]}', 'white', COUNTER_SIZE)
         text_on_screen(LEFT_EDGE_X, 90, f'Event:', 'white', COUNTER_SIZE)
-        # if PHASES[phase_index] != 'Combat':
         if not planning_attack and not attacking and not barrage:
             text_on_screen(LEFT_EDGE_X, 670, 'Out of Action Units:', 'white', COUNTER_SIZE)
             for unit in out_of_action_units:
@@ -122,13 +127,15 @@ def main():
         text_on_screen(90, 830, str(support_units[0].count), 'black', COUNTER_SIZE)
         text_on_screen(90, 890, str(support_units[1].count), 'black', COUNTER_SIZE)
         text_on_screen(90, 950, str(supply.count), 'black', COUNTER_SIZE)
+
+        # information, buttons, icons on screen during certain turns, phases, or situations
         for unit in reinforcement_units:
             if PHASES[phase_index] in ('Dawn', 'Supply') and selected_unit == unit:
                 highlight_unit(unit, screen)
             unit.draw(screen)
         if game_events and PHASES[phase_index] != 'Dawn':
             game_events[-1].draw(screen)
-        if PHASES[phase_index] == 'Combat' and selected_area: # and selected_area.contested:
+        if PHASES[phase_index] == 'Combat' and selected_area:
             if not planning_attack:
                 if not attacking:
                     if selected_area.contested:
@@ -165,6 +172,7 @@ def main():
         
         pos = pygame.mouse.get_pos()
 
+        # information, buttons, icons on screen when mouse is hovering over relevant areas
         if advance_button.rect.collidepoint(pos):
             if not planning_attack and not attacking:
                 if mandatory_attacks:
@@ -172,18 +180,19 @@ def main():
                 else:
                     text_on_screen(1435, advance_button.rect.y + 60, 'Next Phase', 'white', LINE_SIZE)
 
-        if selected_area:
+        if selected_area and not attacking:
             for unit in selected_area.american_units:
                 if unit.rect.collidepoint(pos):
                     text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, f'Movement factor remaining: {unit.movement_factor_remaining}', 'white', LINE_SIZE)
 
+        # update areas to contested or not and mandatory attack if necessary
         for area in map_areas:
             if area.japanese_unit and area.american_units:
-                area.contested = True
+                area.contested = True 
             else:
                 area.contested = False
             if area.japanese_unit and not area.american_units:
-                area.mandatory_attack = True
+                area.mandatory_attack = True 
 
             if control_mode:
                 area.draw_control(screen)
@@ -292,6 +301,7 @@ def main():
             if selected_unit:
                 selected_unit.draw(screen)
 
+            # displays text along with the buttons associated with planning attack, attacking, and barrage
             if selected_area and selected_area.contested:
                 if plan_button.rect.collidepoint(pos): 
                     if not planning_attack: 
@@ -309,13 +319,14 @@ def main():
                     if retreat_button.rect.collidepoint(pos)                    :
                         text_on_screen(retreat_button.rect.x + 5, retreat_button.rect.y + 75, 'Retreat', 'white', LINE_SIZE)
 
+            # displays the results of bloody streets in the combat phase
             if bloody_streets_results:
                 result_rows = len(bloody_streets_results)
                 text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y - ((result_rows * 20) + 10), 'Results of fighting in the Bloody Streets', 'white', HEADER_SIZE)
                 for index, result in enumerate(bloody_streets_results):
                     text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y - 20 * index, result, 'white', LINE_SIZE)
 
-
+        # displays information if the game has been won or lost
         if PHASES[phase_index] == 'End':
             if auto_victory:
                 text_on_screen(LEFT_EDGE_X, BOTTOM_ROW_Y, 'Automatic Victory! Americans control the entire city', 'white', LINE_SIZE)
@@ -335,19 +346,24 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(pos)
 
+            # updates game status based on mouse clicks
+
+                # quits game after showing information about game outcome
                 if auto_victory or operational_victory or morale_loss:
                     running = False
 
+                # removes any message printed on the bottom of the screen
                 if message:
                     message = None
 
-                # also put the bloody streets roll back to 4
+                # removes the results of the bloody streets in the combat phase
                 if bloody_streets_results:
-                    print(bloody_streets_results)
                     bloody_streets_results = []
-                    print(bloody_streets_results)
+
 
                 # advancing the game
+                # this large section advances the game to the next phase if the advance game button is clicked
+                # it also runs anything that occurs at the beginning of a phase
                 if not mandatory_attacks and not planning_attack and not attacking:
                     if advance_button.rect.collidepoint(pos):
                         phase_index, turn_index = advance_game(phase_index, turn_index)
@@ -402,11 +418,9 @@ def main():
                             bloody_streets_areas = [area for area in map_areas if area.contested and area.terrain in ('urban', 'fort')]
                             if bloody_streets_areas:
                                 bloody_streets_results = bloody_streets(bloody_streets_areas, out_of_action_units, morale)
-                                # morale.adjust_morale(-morale_loss)
-                                # print(f'Morale dropped by {morale_loss} points')
-                                if bloody_streets_results:
-                                    for result in bloody_streets_results:
-                                        print(result)
+                                # if bloody_streets_results:
+                                #     for result in bloody_streets_results:
+                                #         print(result)
 
                         # END PHASE
                         if PHASES[phase_index] == 'End':
@@ -423,7 +437,7 @@ def main():
                                         unit.movement_factor_remaining = unit.movement_factor
                                     morale.adjust_morale(-1)
 
-                # control mode
+                # control mode - toggle on/off to see all the areas under American control
                 if control.rect.collidepoint(pos):
                     if not control_mode:
                         control_mode = True
@@ -431,6 +445,7 @@ def main():
                         control_mode = False
 
                 # EVENTS
+                # handles the retreating units from the iwabuchi breakout event
                 if PHASES[phase_index] == 'Event':
                     if game_events[-1].type == 'Iwabuchi Breakout':
                         if retreating_units:
@@ -464,9 +479,9 @@ def main():
                             if area.rect.collidepoint(pos):
                                 if not selected_unit:
                                     if area == selected_area:
-                                        selected_area = None
+                                        selected_area = None # unselects an area by clicking on the area again
                                     elif selected_area == None and area.american_units:
-                                        for unit in area.american_units: # only select if area has a fresh unit
+                                        for unit in area.american_units: # selects area only select if area has a fresh unit
                                             if not unit.spent:
                                                 selected_area = area
                                                 move_from_area = area
@@ -474,30 +489,29 @@ def main():
                                 if selected_unit:
                                     movement_cost, stop_required = calculate_movement_cost(area, map_areas)
                                     message = move_unit(selected_unit, move_from_area, area, movement_cost, stop_required)
-                                    if message:
+                                    if message: # if a message was received the move didn't work - this bit of code puts the unit back where it was previously
                                         selected_unit.rect.x = previous_rect_x
                                         selected_unit.rect.y = previous_rect_y
-                                    if area.mandatory_attack and area.contested:
+                                    if area.mandatory_attack and area.contested: # adds area to list of mandatory attack areas 
                                         mandatory_attacks.add(area)
                                     move_from_area = None
                                     selected_unit = None
-                                    print(message)
-                                    print(mandatory_attacks)
 
 
                         # show selected unit
                         if selected_area:
                             for unit in selected_area.american_units:
                                 if unit.rect.collidepoint(pos):
-                                    selected_unit = unit
-                                    previous_rect_x = unit.rect.x
+                                    selected_unit = unit # selects the unit and stores its current rect as previous to prepare for the move
+                                    previous_rect_x = unit.rect.x 
                                     previous_rect_y = unit.rect.y
                                     update_rects_for_location_change([unit])
-                                    print(f'remaining movement factor: {selected_unit.movement_factor_remaining}')
-                                    selected_area = None
+                                    # print(f'remaining movement factor: {selected_unit.movement_factor_remaining}')
+                                    selected_area = None # frees the area so can see other areas when deciding where to move the unit
 
 
                     # attacking
+                    # more retreating units code
                     if retreating_units:
                         if retreating_unit:
                             for area in map_areas:
@@ -507,31 +521,25 @@ def main():
                                         # retreating_unit = None
                                         unit.retreating = False
                         else:
-                            for unit in retreating_units:
+                            for unit in retreating_units[:]:
+                                # print(unit.unit)
                                 if unit.rect.collidepoint(pos):
+                                    print(f'clicked unit: {unit.unit}')
                                     initial_len = len(retreating_units)
                                     retreating_units = retreat(unit, selected_area, retreating_units)
+                                    # print(f'retreating unit after clicking: {}')
                                     after_len = len(retreating_units)
                                     if initial_len == after_len:
                                         retreating_unit = unit
                                         unit.retreating = True
 
 
+                    # this code at very end of attack attacking is still on but barrage and retreat are over
                     if attacking and not barrage and not retreating_units: 
-                        # if selected_area.japanese_unit.strategy_available:
-                        #     if selected_area.japanese_unit.strategy == 'sniper':
-                        #         out_of_action_units, attacking_units = sniper(attacking_units, selected_area, out_of_action_units)
-                        #     if selected_area.japanese_unit.strategy == 'ambush':
-                        #         out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
                         if attack_result:
                             out_of_action_units = apply_attack_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
                         if selected_area.japanese_unit: # clear everything after attack
                             selected_area.japanese_unit.strategy_available = False
-                        # for unit in attacking_units:
-                        #     unit.attacking = False
-                        #     unit.attack_lead = False
-                            # unit.spent = True
-                        attacking_units = []
                         lead_attack_unit = None
                         attack_value = 0
                         artillery_support_attack.count = 0
@@ -545,7 +553,8 @@ def main():
                         barrage_retreating = False
 
 
-                    if attacking and barrage:
+                    # activates if barrage is the japanese strategy
+                    if attacking and barrage: # applies all steps of attack except for retreating units, which is handled above
                         if attack_button.rect.collidepoint(pos):
                             attacking_units, out_of_action_units, lead_attack_unit = barrage_press_on(attacking_units, lead_attack_unit, selected_area, out_of_action_units)
                             selected_area.japanese_unit.strategy_available = False
@@ -556,7 +565,9 @@ def main():
                             if attack_result == 'repulse' and selected_area.mandatory_attack:
                                 retreating_units = [unit for unit in attacking_units if not unit.attack_lead]
                             out_of_action_units = apply_attack_outcome(attack_result, attacking_units, selected_area, out_of_action_units, morale, control)
-                        if retreat_button.rect.collidepoint(pos):
+                            for unit in retreating_units:
+                                print(unit.unit)
+                        if retreat_button.rect.collidepoint(pos): # designates all units as retreating and refunds unused attack support
                             retreating_units = [unit for unit in attacking_units]
                             attacking_units, lead_attack_unit = barrage_retreat(attacking_units, lead_attack_unit)
                             support_units[0].count += artillery_support_attack.count
@@ -566,14 +577,15 @@ def main():
                             barrage_retreating = True
                             attack_result = None
 
-
+                    
                     if selected_area and selected_area.contested:
+                        # activates planning attack when the plan attack button is clicked
                         if not planning_attack:
                             if not attacking:
                                 if plan_button.rect.collidepoint(pos):
                                     planning_attack = True
-                                # attacking_units = []
-
+                                    attacking_units = []
+                        # allows cycling units into and out of the attack as well as designating the lead attack unit
                         else:
                             for unit in selected_area.american_units:
                                 if unit.rect.collidepoint(pos):
@@ -597,7 +609,7 @@ def main():
                                     else:
                                         print('Unit is paused and may not attack')
 
-
+                            # allows artillery and engineer support to be included in attack under certain conditions
                             if artillery_support_attack.count + engineer_support_attack.count < len(attacking_units): # support limit 9.5.4
                                 if artillery_support_attack.rect.collidepoint(pos):
                                     if (TURNS[turn_index][0] < 4 and artillery_support_attack.count == 0) or TURNS[turn_index][0] >= 4:
@@ -610,6 +622,7 @@ def main():
 
                             selected_area.calculate_defense_value(morale) 
 
+                            # performs the attack when the attack button is clicked
                             if attack_button.rect.collidepoint(pos):
                                 if attacking_units and lead_attack_unit:
                                     selected_area.japanese_unit.revealed = True
@@ -621,9 +634,9 @@ def main():
                                     if not barrage:
                                         attack_battle_value, defense_battle_value, total_attack_value, total_defense_value = attack(attack_value, selected_area)
                                         attack_result = determine_attack_result(total_attack_value, total_defense_value, selected_area)
-                                        print(attack_result)
+                                        # print(attack_result)
                                         # print(selected_area.japanese_unit.strategy_available)
-                                        print(selected_area.japanese_unit.strategy)
+                                        # print(selected_area.japanese_unit.strategy)
                                         if selected_area.japanese_unit.strategy_available:
                                             if selected_area.japanese_unit.strategy == 'sniper':
                                                 out_of_action_units, attacking_units = sniper(attacking_units, selected_area, out_of_action_units)
@@ -631,10 +644,15 @@ def main():
                                                 out_of_action_units, attacking_units = ambush(attacking_units, selected_area, out_of_action_units)
                                         if attack_result == 'repulse' and selected_area.mandatory_attack:
                                             retreating_units = [unit for unit in attacking_units if not unit.attack_lead]
+                                            for unit in attacking_units:
+                                                print(f'attacking unit: {unit.unit}')
+                                            for unit in retreating_units:
+                                                print(f'retreating unit: {unit.unit}')
 
 
                 # dawn
                 # reinforcements
+                # allows reinforcements to be placed on the map (may be a bit redundant with the reinforcements from out of action code below)
                 if PHASES[phase_index] in ('Dawn', 'Supply'):
                     # print(selected_unit.unit)
                     for unit in reinforcement_units:
@@ -650,6 +668,7 @@ def main():
 
 
                 # supply
+                # this allows spending supply for the various helpful items
                 if PHASES[phase_index] == 'Supply':
 
                     # may want to put these into one or two functions
@@ -671,7 +690,9 @@ def main():
                                 morale.adjust_morale(1)
                         else:
                             morale_message_4 = 'Morale already at max'
-                    # return unit to map - MAYBE WANT TO CLEAN THIS UP
+
+
+                    # return unit to reinforcements from out of action
                     for unit in out_of_action_units:
                         if unit.rect.collidepoint(pos):
                             if unit.unit_type in ('infantry', 'armor'):
@@ -682,21 +703,17 @@ def main():
                                     out_of_action_units.remove(unit)
                                     update_out_of_action_unit_positions(out_of_action_units)
                                 
-                    # finish placing the reinforcement
-                    print(f'first rein units {reinforcement_units}')
+                    # place reinforcements on the map
                     if reinforcement_units and not selected_unit:
                         for unit in reinforcement_units:
                             if unit.rect.collidepoint(pos):
                                 selected_unit = unit
-                                # print(f'selected unit: {selected_unit.unit}')
-                                # print(f'second rein units {reinforcement_units}')
+
 
                     if selected_unit:
                         for area in map_areas:
                             if area.rect.collidepoint(pos):
-                                # print(f'third rein unit {reinforcement_units}')
-                                selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)
-                    # print(f'selected unit {selected_unit}')                                              
+                                selected_unit, message = place_reinforcement(selected_unit, area, reinforcement_units)                                          
 
 
 
